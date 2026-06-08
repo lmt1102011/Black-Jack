@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_PAGES: 'true'
-      VITE_API_URL: ${{ vars.VITE_API_URL || 'https://black-jack-api.onrender.com' }}
+      VITE_API_URL: ${{ vars.VITE_API_URL }}
       VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY || 'AIzaSyANvdDeGuHGff_MCUhd2_4pr4CFLoKFsMM' }}
       VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN || 'black-jack-a3747.firebaseapp.com' }}
       VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID || 'black-jack-a3747' }}
@@ -40,6 +40,13 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Check frontend backend URL
+        run: |
+          if [ -z "$VITE_API_URL" ]; then
+            echo "Missing GitHub Actions variable: VITE_API_URL"
+            echo "Set it to your real Render backend URL, for example https://your-service-name.onrender.com"
+            exit 1
+          fi
       - run: npm ci
       - run: npm run build --workspace client
       - uses: actions/configure-pages@v5
