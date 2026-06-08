@@ -1,0 +1,112 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId)
+        && !('chips' in request.resource.data.diff(resource.data).changedKeys())
+        && !('rankPoints' in request.resource.data.diff(resource.data).changedKeys());
+      allow delete: if false;
+    }
+
+    match /profiles/{userId} {
+      allow read: if signedIn();
+      allow create, update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+    match /statistics/{userId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /friends/{userId}/items/{friendId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+    }
+
+    match /friendRequests/{requestId} {
+      allow read: if signedIn()
+        && (resource.data.fromUid == request.auth.uid || resource.data.toUid == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.fromUid == request.auth.uid;
+      allow update: if signedIn() && resource.data.toUid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    match /messages/{messageId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() <= 280;
+      allow update, delete: if false;
+    }
+
+    match /tables/{tableId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /matches/{matchId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /leaderboards/{boardId}/entries/{entryId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /missions/{userId}/items/{missionId} {
+      allow read: if isOwner(userId);
+      allow write: if false;
+    }
+
+    match /achievements/{userId}/items/{achievementId} {
+      allow read: if isOwner(userId);
+      allow write: if false;
+    }
+
+    match /battlePass/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if false;
+    }
+
+    match /shopItems/{itemId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /inventory/{userId}/items/{itemId} {
+      allow read: if isOwner(userId);
+      allow write: if false;
+    }
+
+    match /seasonData/{seasonId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /notifications/{userId}/items/{notificationId} {
+      allow read: if isOwner(userId);
+      allow update: if isOwner(userId)
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['readAt']);
+      allow create, delete: if false;
+    }
+  }
+}

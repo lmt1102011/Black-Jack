@@ -1,0 +1,16 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="800" fill="#0b1f17"/>
+  <path d="M0 0h1200v800H0z" fill="url(#feltNoise)" opacity=".18"/>
+  <ellipse cx="600" cy="400" rx="515" ry="305" fill="#145338" stroke="#d8ad5f" stroke-width="20"/>
+  <ellipse cx="600" cy="400" rx="455" ry="252" fill="#103224" stroke="#f7f0de" stroke-opacity=".22" stroke-width="3"/>
+  <path d="M290 408c96 82 514 82 620 0" stroke="#d8ad5f" stroke-opacity=".35" stroke-width="5" stroke-linecap="round"/>
+  <path d="M396 303c104-49 307-49 408 0" stroke="#f7f0de" stroke-opacity=".14" stroke-width="4" stroke-linecap="round"/>
+  <defs>
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="3" stitchTiles="stitch"/>
+    </filter>
+    <pattern id="feltNoise" width="160" height="160" patternUnits="userSpaceOnUse">
+      <rect width="160" height="160" filter="url(#noise)" opacity=".32"/>
+    </pattern>
+  </defs>
+</svg>
