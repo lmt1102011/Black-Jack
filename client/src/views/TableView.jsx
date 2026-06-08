@@ -135,7 +135,6 @@ export function TableView({ table, profile, connected, actions, remotePeeks = {}
             {viewerSeat ? (
               <PlayerSpot
                 active={viewerSeat.id === table.activeSeatId}
-                actions={actions}
                 dealtCards={dealtCards}
                 remotePeeks={remotePeeks}
                 seat={viewerSeat}
@@ -239,7 +238,7 @@ function DeckButton({ disabled, onDraw }) {
   );
 }
 
-function PlayerSpot({ active, actions, dealtCards, large = false, remotePeeks, seat, tableId, tablePhase, viewer }) {
+function PlayerSpot({ active, dealtCards, large = false, remotePeeks, seat, tableId, tablePhase, viewer }) {
   const revealAll = tablePhase === TABLE_PHASES.dealer || tablePhase === TABLE_PHASES.settled || seat.hands?.some((hand) => hand.result);
   const visibleHands = seat.hands ?? [];
 
@@ -262,16 +261,20 @@ function PlayerSpot({ active, actions, dealtCards, large = false, remotePeeks, s
       {visibleHands.length ? (
         <div className={clsx('grid gap-2', large && visibleHands.length > 1 && 'sm:grid-cols-2')}>
           {visibleHands.map((hand, handIndex) => {
-            const stackCards = viewer && large && !revealAll;
+            const useStackedReveal = viewer && large && !revealAll && hand.cards.length >= 2 && hand.cards.every((card) => !card.hidden);
+            const stackCards = !useStackedReveal && viewer && large && !revealAll;
             return (
               <div key={hand.id} className={clsx(large ? 'viewer-hand-zone' : 'hand-strip p-2')}>
                 <div className={clsx('mb-2 flex items-center justify-between gap-2 text-xs', large && 'viewer-hand-meta')}>
                   <span className="font-semibold text-white/[0.52]">{large ? `Tay ${handIndex + 1}` : `T${handIndex + 1}`}</span>
                   <span className={clsx('font-black', hand.result ? resultTone(hand.result) : 'text-white/65')}>
-                    {hand.result ? resultText(hand.result) : revealAll ? slatScoreLabel(hand) : viewer ? 'Kéo góc để xem' : 'Úp bài'}
+                    {hand.result ? resultText(hand.result) : revealAll ? slatScoreLabel(hand) : viewer ? 'Bấm lật, kéo lá trước' : 'Úp bài'}
                   </span>
                 </div>
-                <div className={clsx(
+                {useStackedReveal ? (
+                  <ViewerStackedHand dealtCards={dealtCards} hand={hand} />
+                ) : (
+                  <div className={clsx(
                   'slat-card-line',
                   large ? 'viewer-card-line' : 'opponent-card-line',
                   stackCards && 'viewer-card-stack'
@@ -287,18 +290,16 @@ function PlayerSpot({ active, actions, dealtCards, large = false, remotePeeks, s
                           compact={!large}
                           dealt={viewer && dealtCards.has(card.id)}
                           faceDown={faceDown}
-                          interactive={viewer && faceDown && !card.hidden}
-                          onPeekChange={viewer ? (activePeek) => actions?.cardPeek(tableId, hand.id, cardIndex, activePeek) : undefined}
                           remotePeek={!viewer && Boolean(remotePeeks?.[peekKey])}
-                          peekLabel="Lật"
                         />
                       </div>
                     );
                   })}
-                </div>
+                  </div>
+                )}
                 <div className={clsx('mt-2 flex items-center justify-between gap-2 text-xs text-white/[0.48]', large && 'viewer-hand-footer')}>
                   <span>Cược {formatNumber(hand.bet)}</span>
-                  {viewer && !revealAll ? <span>peek riêng tư</span> : null}
+                  {viewer && !revealAll ? <span>bài riêng</span> : null}
                 </div>
               </div>
             );
@@ -309,6 +310,91 @@ function PlayerSpot({ active, actions, dealtCards, large = false, remotePeeks, s
           {seat.pendingBet ? `Sẵn sàng - ${formatNumber(seat.pendingBet)}` : 'Đang chờ'}
         </div>
       )}
+    </div>
+  );
+}
+
+function ViewerStackedHand({ dealtCards, hand }) {
+  const [opened, setOpened] = useState(false);
+  const [drag, setDrag] = useState({ active: false, x: 0, y: 0 });
+  const dragStartRef = useRef(null);
+  const frontIndex = 0;
+
+  function openStack() {
+    setOpened(true);
+  }
+
+  function handleStackKeyDown(event) {
+    if (opened || (event.key !== 'Enter' && event.key !== ' ')) return;
+    event.preventDefault();
+    openStack();
+  }
+
+  function handleFrontPointerDown(event) {
+    if (!opened) return;
+    event.stopPropagation();
+    dragStartRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      originX: drag.x,
+      originY: drag.y
+    };
+    setDrag((current) => ({ ...current, active: true }));
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  }
+
+  function handleFrontPointerMove(event) {
+    if (!dragStartRef.current) return;
+    event.preventDefault();
+    const rawX = event.clientX - dragStartRef.current.x;
+    const rawY = event.clientY - dragStartRef.current.y;
+    setDrag({
+      active: true,
+      x: clampDrag(dragStartRef.current.originX + rawX, -126, 126),
+      y: clampDrag(dragStartRef.current.originY + rawY, -84, 84)
+    });
+  }
+
+  function finishFrontDrag(event) {
+    if (!dragStartRef.current) return;
+    dragStartRef.current = null;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    setDrag({ active: false, x: 0, y: 0 });
+  }
+
+  return (
+    <div
+      role={!opened ? 'button' : undefined}
+      tabIndex={!opened ? 0 : undefined}
+      aria-label={!opened ? 'Lật bài' : undefined}
+      onClick={!opened ? openStack : undefined}
+      onKeyDown={handleStackKeyDown}
+      className={clsx('slat-card-line viewer-card-line viewer-two-card-stage', opened ? 'is-opened' : 'is-closed')}
+    >
+      {hand.cards.map((card, cardIndex) => {
+        const isFront = cardIndex === frontIndex;
+        return (
+          <div
+            key={card.id}
+            className={clsx(
+              'slat-card-slot',
+              isFront && opened && 'viewer-front-card-slot',
+              isFront && drag.active && 'is-dragging'
+            )}
+            onPointerDown={isFront ? handleFrontPointerDown : undefined}
+            onPointerMove={isFront ? handleFrontPointerMove : undefined}
+            onPointerUp={isFront ? finishFrontDrag : undefined}
+            onPointerCancel={isFront ? finishFrontDrag : undefined}
+            style={viewerStackSlotStyle(cardIndex, frontIndex, opened, drag)}
+          >
+            <PlayingCard
+              card={card}
+              dealt={dealtCards.has(card.id)}
+              faceDown={!opened}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -403,6 +489,26 @@ function cardSlotStyle(index, count, stacked) {
     '--card-lift': `${Math.abs(centerOffset) * 3}px`,
     '--card-tilt': `${centerOffset * 4.5}deg`
   };
+}
+
+function viewerStackSlotStyle(index, frontIndex, opened, drag) {
+  const isFront = index === frontIndex;
+  const behindOrder = index > frontIndex ? index : index + 1;
+  const baseX = opened ? (isFront ? 8 : -8 - behindOrder * 2) : 0;
+  const baseY = opened ? (isFront ? -5 : 6 + behindOrder) : 0;
+  const baseRotate = opened ? (isFront ? 2.5 : -4 - behindOrder * 0.8) : 0;
+  const dragX = isFront ? drag.x : 0;
+  const dragY = isFront ? drag.y : 0;
+  return {
+    zIndex: isFront ? 20 : 10 - behindOrder,
+    '--stack-x': `${baseX + dragX}px`,
+    '--stack-y': `${baseY + dragY}px`,
+    '--stack-rotate': `${baseRotate + dragX * 0.035}deg`
+  };
+}
+
+function clampDrag(value, min, max) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function phaseLabel(phase) {
