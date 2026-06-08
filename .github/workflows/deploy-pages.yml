@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_PAGES: 'true'
+      VITE_APP_VERSION: ${{ github.sha }}
       VITE_API_URL: ${{ vars.VITE_API_URL }}
       VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY || 'AIzaSyANvdDeGuHGff_MCUhd2_4pr4CFLoKFsMM' }}
       VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN || 'black-jack-a3747.firebaseapp.com' }}
@@ -48,6 +49,14 @@ jobs:
             exit 1
           fi
       - run: npm ci
+      - name: Write frontend version manifest
+        run: |
+          cat > client/public/version.json <<EOF
+          {
+            "version": "${GITHUB_SHA}",
+            "builtAt": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          }
+          EOF
       - run: npm run build --workspace client
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

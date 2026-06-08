@@ -1,6 +1,9 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
+import { TABLE_PHASES } from '@blackjack/shared';
 import { Notice } from './components/Notice.jsx';
 import { NavBar } from './components/NavBar.jsx';
+import { UpdateBanner } from './components/UpdateBanner.jsx';
+import { useAutoUpdate } from './hooks/useAutoUpdate.js';
 import { useAuth } from './hooks/useAuth.js';
 import { useSocket } from './hooks/useSocket.js';
 import { AuthScreen } from './views/AuthScreen.jsx';
@@ -23,6 +26,8 @@ export default function App() {
   const auth = useAuth();
   const socket = useSocket(auth.profile, auth.getToken);
   const [activeView, setActiveView] = useState('home');
+  const inActiveRound = socket.table?.phase === TABLE_PHASES.playing || socket.table?.phase === TABLE_PHASES.dealer;
+  const autoUpdate = useAutoUpdate({ canReloadAutomatically: !inActiveRound });
 
   useEffect(() => {
     if (socket.table && ['home', 'lobby'].includes(activeView)) {
@@ -84,6 +89,7 @@ export default function App() {
       </main>
 
       <Notice notice={socket.notice} onClose={socket.clearNotice} />
+      <UpdateBanner updateInfo={autoUpdate.updateInfo} onReload={autoUpdate.reloadNow} />
     </div>
   );
 }
