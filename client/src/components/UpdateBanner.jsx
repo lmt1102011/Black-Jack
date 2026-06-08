@@ -9,7 +9,7 @@ export function UpdateBanner({ updateInfo, onReload }) {
         <Download className="mt-0.5 h-5 w-5 text-brass" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-black text-ivory">New version ready</p>
-          <p className="mt-1 text-sm text-white/62">Finish this hand, then update for the latest build.</p>
+          <p className="mt-1 text-sm text-white/[0.62]">Finish this hand, then update for the latest build.</p>
         </div>
         <button type="button" className="btn btn-primary min-h-10 px-3" onClick={onReload}>
           <RefreshCw className="h-4 w-4" />
