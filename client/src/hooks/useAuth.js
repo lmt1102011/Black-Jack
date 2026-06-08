@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { authApi, firebaseEnabled } from '../firebase/client.js';
+import { firebaseEnabled } from '../firebase/config.js';
 
 const guestIdKey = 'blackjack.guestId';
 const guestNameKey = 'blackjack.guestName';
@@ -7,6 +7,7 @@ const guestNameKey = 'blackjack.guestName';
 function getGuestId() {
   const existing = localStorage.getItem(guestIdKey);
   if (existing) return existing;
+
   const created = `guest_${crypto.randomUUID()}`;
   localStorage.setItem(guestIdKey, created);
   return created;
@@ -52,18 +53,29 @@ export function useAuth() {
       return undefined;
     }
 
-    return authApi.onChange((user) => {
-      if (user) {
-        setProfile(profileFromFirebaseUser(user));
-        setAuthMode('firebase');
-      }
-      setLoading(false);
-    });
+    let unsubscribe = () => {};
+    import('../firebase/client.js')
+      .then(({ authApi }) => {
+        unsubscribe = authApi.onChange((user) => {
+          if (user) {
+            setProfile(profileFromFirebaseUser(user));
+            setAuthMode('firebase');
+          }
+          setLoading(false);
+        });
+      })
+      .catch((error) => {
+        setAuthError(error.message);
+        setLoading(false);
+      });
+
+    return () => unsubscribe();
   }, []);
 
   const login = useCallback(async (email, password) => {
     setAuthError('');
     try {
+      const { authApi } = await import('../firebase/client.js');
       const credential = await authApi.login(email, password);
       setProfile(profileFromFirebaseUser(credential.user));
       setAuthMode('firebase');
@@ -76,6 +88,7 @@ export function useAuth() {
   const register = useCallback(async (email, password, username) => {
     setAuthError('');
     try {
+      const { authApi } = await import('../firebase/client.js');
       const credential = await authApi.register(email, password, username);
       setProfile(profileFromFirebaseUser(credential.user));
       setAuthMode('firebase');
@@ -88,6 +101,7 @@ export function useAuth() {
   const resetPassword = useCallback(async (email) => {
     setAuthError('');
     try {
+      const { authApi } = await import('../firebase/client.js');
       await authApi.resetPassword(email);
     } catch (error) {
       setAuthError(error.message);
@@ -103,7 +117,10 @@ export function useAuth() {
   }, []);
 
   const logout = useCallback(async () => {
-    if (authMode === 'firebase') await authApi.logout();
+    if (authMode === 'firebase') {
+      const { authApi } = await import('../firebase/client.js');
+      await authApi.logout();
+    }
     localStorage.removeItem(guestNameKey);
     setProfile(null);
     setAuthMode('guest');

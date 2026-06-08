@@ -1,5 +1,4 @@
 import clsx from 'clsx';
-import { motion } from 'framer-motion';
 import { suitSymbol } from '../lib/format.js';
 
 export function PlayingCard({ card, compact = false }) {
@@ -7,12 +6,9 @@ export function PlayingCard({ card, compact = false }) {
   const red = card?.suit === 'hearts' || card?.suit === 'diamonds';
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 16, rotate: -2 }}
-      animate={{ opacity: 1, y: 0, rotate: 0 }}
+    <div
       className={clsx(
-        'relative shrink-0 overflow-hidden rounded-md border shadow-lg',
+        'card-enter relative shrink-0 overflow-hidden rounded-md border shadow-lg',
         compact ? 'h-20 w-14 sm:h-24 sm:w-16' : 'h-24 w-16 sm:h-32 sm:w-24',
         hidden
           ? 'border-brass/60 bg-[url("/assets/card-back.svg")] bg-cover bg-center'
@@ -34,6 +30,6 @@ export function PlayingCard({ card, compact = false }) {
           </div>
         </div>
       ) : null}
-    </motion.div>
+    </div>
   );
 }
