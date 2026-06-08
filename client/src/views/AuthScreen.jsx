@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { KeyRound, LogIn, Mail, UserPlus } from 'lucide-react';
+import { assets } from '../lib/assets.js';
 
 export function AuthScreen({ auth }) {
   const [mode, setMode] = useState('guest');
@@ -35,7 +36,7 @@ export function AuthScreen({ auth }) {
       <div className="grid w-full max-w-5xl gap-6 lg:grid-cols-[1.05fr_.95fr]">
         <section className="flex min-h-[560px] flex-col justify-between rounded-md border border-brass/25 bg-ink/70 p-6 shadow-table backdrop-blur-xl sm:p-8">
           <div>
-            <img src="/assets/chip.svg" alt="" className="h-16 w-16" />
+            <img src={assets.chip} alt="" className="h-16 w-16" />
             <h1 className="mt-6 text-4xl font-black text-ivory sm:text-6xl">AAA Blackjack</h1>
             <p className="mt-4 max-w-xl text-base leading-7 text-white/[0.64]">
               A real-time social Blackjack room with server-authoritative cards, premium casino tables, ranked progression, missions, and cosmetic rewards.

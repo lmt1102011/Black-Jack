@@ -116,7 +116,7 @@ button:disabled {
 }
 
 .table-felt {
-  background-image: linear-gradient(rgba(5, 12, 10, 0.16), rgba(5, 12, 10, 0.38)), url('/assets/table-felt.svg');
+  background-image: linear-gradient(rgba(5, 12, 10, 0.16), rgba(5, 12, 10, 0.38)), var(--table-felt-url);
   background-size: cover;
   background-position: center;
 }

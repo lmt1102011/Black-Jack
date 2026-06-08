@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { assets } from '../lib/assets.js';
 import { suitSymbol } from '../lib/format.js';
 
 export function PlayingCard({ card, compact = false }) {
@@ -7,11 +8,12 @@ export function PlayingCard({ card, compact = false }) {
 
   return (
     <div
+      style={hidden ? { backgroundImage: `url("${assets.cardBack}")` } : undefined}
       className={clsx(
         'card-enter relative shrink-0 overflow-hidden rounded-md border shadow-lg',
         compact ? 'h-20 w-14 sm:h-24 sm:w-16' : 'h-24 w-16 sm:h-32 sm:w-24',
         hidden
-          ? 'border-brass/60 bg-[url("/assets/card-back.svg")] bg-cover bg-center'
+          ? 'border-brass/60 bg-cover bg-center'
           : 'border-black/10 bg-ivory'
       )}
     >

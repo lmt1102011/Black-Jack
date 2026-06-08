@@ -5,6 +5,7 @@ import { PLAYER_ACTIONS, TABLE_PHASES } from '@blackjack/shared';
 import { ChipButton } from '../components/ChipButton.jsx';
 import { PlayingCard } from '../components/PlayingCard.jsx';
 import { Seat } from '../components/Seat.jsx';
+import { assets } from '../lib/assets.js';
 import { formatNumber } from '../lib/format.js';
 
 const chipValues = [100, 250, 500, 1000, 2500, 5000];
@@ -40,7 +41,7 @@ export function TableView({ table, profile, connected, actions, goLobby }) {
   if (!table) {
     return (
       <section className="table-felt flex min-h-[620px] flex-col items-center justify-center rounded-md border border-brass/25 p-6 text-center shadow-table">
-        <img src="/assets/dealer-badge.svg" alt="" className="h-24 w-24" />
+        <img src={assets.dealerBadge} alt="" className="h-24 w-24" />
         <h1 className="mt-6 text-3xl font-black sm:text-5xl">Take a Seat</h1>
         <p className="mt-3 max-w-xl text-white/[0.62]">Join a table and start playing in guest mode or with Firebase login.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -140,7 +141,7 @@ function DealerArea({ cards, score }) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-3">
-        <img src="/assets/dealer-badge.svg" alt="" className="h-14 w-14" />
+        <img src={assets.dealerBadge} alt="" className="h-14 w-14" />
         <div>
           <p className="text-lg font-black">Dealer</p>
           <p className="text-sm text-white/55">{score?.label ?? 'Hole card hidden'}</p>

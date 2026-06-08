@@ -18,6 +18,7 @@ import {
   X
 } from 'lucide-react';
 import { useState } from 'react';
+import { assets } from '../lib/assets.js';
 
 const primaryItems = [
   { id: 'home', label: 'Home', icon: Home },
@@ -58,7 +59,7 @@ export function NavBar({ activeView, setActiveView, profile, connected, onLogout
         </button>
 
         <button type="button" onClick={() => chooseView('home')} className="flex min-w-0 items-center gap-3">
-          <img src="/assets/chip.svg" alt="" className="h-10 w-10" />
+          <img src={assets.chip} alt="" className="h-10 w-10" />
           <div className="hidden text-left sm:block">
             <p className="text-sm font-black uppercase text-brass">AAA Blackjack</p>
             <p className="text-xs text-white/50">Play table first</p>

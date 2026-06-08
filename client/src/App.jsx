@@ -7,6 +7,7 @@ import { AuthScreen } from './views/AuthScreen.jsx';
 import { HomeView } from './views/HomeView.jsx';
 import { LobbyView } from './views/LobbyView.jsx';
 import { TableView } from './views/TableView.jsx';
+import { assets } from './lib/assets.js';
 
 const MissionsView = lazy(() => import('./views/MetaViews.jsx').then((module) => ({ default: module.MissionsView })));
 const LeaderboardsView = lazy(() => import('./views/MetaViews.jsx').then((module) => ({ default: module.LeaderboardsView })));
@@ -33,7 +34,7 @@ export default function App() {
     return (
       <main className="flex min-h-screen items-center justify-center">
         <div className="surface rounded-md p-8 text-center">
-          <img src="/assets/chip.svg" alt="" className="mx-auto h-16 w-16 animate-pulse" />
+          <img src={assets.chip} alt="" className="mx-auto h-16 w-16 animate-pulse" />
           <p className="mt-4 font-black">Loading casino</p>
         </div>
       </main>
