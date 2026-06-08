@@ -282,7 +282,7 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
       viewer && !large && 'is-viewer'
     )}
     >
-      <div className="mb-2 flex items-center justify-between gap-2">
+      <div className={clsx('mb-2 flex items-center justify-between gap-2', large && 'viewer-hand-header')}>
         <div className="min-w-0">
           <p className={clsx('truncate font-black', large ? 'text-base' : 'text-sm')}>{viewer ? 'Bạn' : seat.username}</p>
           <p className="truncate text-xs text-white/45">{seat.rank} - {formatNumber(seat.chips)} chips</p>
@@ -296,16 +296,22 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
             const revealedCount = hand.cards.filter((card) => revealAll || revealedCards.has(card.id)).length;
             const allCardsVisible = revealedCount === hand.cards.length;
             const shouldShowScore = revealAll || (viewer && allCardsVisible);
+            const stackCards = viewer && large && !revealAll;
             return (
-              <div key={hand.id} className="hand-strip p-2">
-                <div className="mb-2 flex items-center justify-between gap-2 text-xs">
+              <div key={hand.id} className={clsx(large ? 'viewer-hand-zone' : 'hand-strip p-2')}>
+                <div className={clsx('mb-2 flex items-center justify-between gap-2 text-xs', large && 'viewer-hand-meta')}>
                   <span className="font-semibold text-white/[0.52]">{large ? `Tay ${handIndex + 1}` : `T${handIndex + 1}`}</span>
                   <span className={clsx('font-black', hand.result ? resultTone(hand.result) : 'text-white/65')}>
                     {hand.result ? resultText(hand.result) : shouldShowScore ? slatScoreLabel(hand) : revealedCount ? `${revealedCount} lá mở` : 'Úp bài'}
                   </span>
                 </div>
-                <div className={clsx('flex min-h-[82px] items-center', large ? 'gap-2' : 'gap-1')}>
-                  {hand.cards.map((card) => {
+                <div className={clsx(
+                  'slat-card-line',
+                  large ? 'viewer-card-line' : 'opponent-card-line',
+                  stackCards && 'viewer-card-stack'
+                )}
+                >
+                  {hand.cards.map((card, cardIndex) => {
                     const faceDown = !(revealAll || (viewer && revealedCards.has(card.id)));
                     const previousOpenCard = hand.cards
                       .slice(0, hand.cards.indexOf(card))
@@ -313,22 +319,23 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
                       .find((candidate) => revealAll || revealedCards.has(candidate.id));
                     const weightLevel = viewer && faceDown && !revealAll ? revealedCount : 0;
                     return (
-                      <PlayingCard
-                        key={card.id}
-                        card={card}
-                        compact={!large}
-                        dealt={viewer && dealtCards.has(card.id)}
-                        faceDown={faceDown}
-                        interactive={viewer && faceDown && !revealAll}
-                        onReveal={revealCard}
-                        peekLabel="Lật"
-                        stackedCard={previousOpenCard}
-                        weightLevel={weightLevel}
-                      />
+                      <div key={card.id} className="slat-card-slot" style={cardSlotStyle(cardIndex, hand.cards.length, stackCards)}>
+                        <PlayingCard
+                          card={card}
+                          compact={!large}
+                          dealt={viewer && dealtCards.has(card.id)}
+                          faceDown={faceDown}
+                          interactive={viewer && faceDown && !revealAll}
+                          onReveal={revealCard}
+                          peekLabel="Lật"
+                          stackedCard={previousOpenCard}
+                          weightLevel={weightLevel}
+                        />
+                      </div>
                     );
                   })}
                 </div>
-                <div className="mt-2 flex items-center justify-between gap-2 text-xs text-white/[0.48]">
+                <div className={clsx('mt-2 flex items-center justify-between gap-2 text-xs text-white/[0.48]', large && 'viewer-hand-footer')}>
                   <span>Cược {formatNumber(hand.bet)}</span>
                   {viewer && !revealAll ? <span>{revealedCount}/{hand.cards.length} lật</span> : null}
                 </div>
@@ -445,6 +452,16 @@ function ActionButton({ label, action, actions, tableId, disabled, danger = fals
       {label}
     </button>
   );
+}
+
+function cardSlotStyle(index, count, stacked) {
+  if (!stacked) return undefined;
+  const centerOffset = index - ((count - 1) / 2);
+  return {
+    zIndex: index + 1,
+    '--card-lift': `${Math.abs(centerOffset) * 3}px`,
+    '--card-tilt': `${centerOffset * 4.5}deg`
+  };
 }
 
 function phaseLabel(phase) {
