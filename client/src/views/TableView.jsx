@@ -84,7 +84,7 @@ export function TableView({ table, profile, connected, actions, goLobby }) {
 
   if (!table) {
     return (
-      <section className="table-felt flex h-[calc(100vh-5.25rem)] min-h-[620px] flex-col items-center justify-center rounded-md border border-brass/25 p-6 text-center shadow-table">
+      <section className="table-felt flex h-[calc(100vh-1rem)] min-h-[560px] flex-col items-center justify-center rounded-md border border-brass/25 p-6 text-center shadow-table">
         <img src={assets.dealerBadge} alt="" className="h-24 w-24" />
         <h1 className="mt-6 text-3xl font-black sm:text-5xl">Vào bàn</h1>
         <p className="mt-3 max-w-xl text-white/[0.62]">Chọn bàn hoặc vào nhanh để chơi.</p>
@@ -102,7 +102,7 @@ export function TableView({ table, profile, connected, actions, goLobby }) {
   }
 
   return (
-    <section className="table-felt relative h-[calc(100vh-5.25rem)] min-h-[620px] overflow-hidden rounded-md border border-brass/25 p-3 shadow-table sm:p-4">
+    <section className="table-felt relative h-[calc(100vh-1rem)] min-h-[560px] overflow-hidden rounded-md border border-brass/25 p-3 shadow-table sm:p-4">
       <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-3">
         <TableTopBar
           activeSeat={activeSeat}

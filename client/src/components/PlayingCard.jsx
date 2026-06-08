@@ -21,10 +21,13 @@ export function PlayingCard({
   const startRef = useRef(null);
   const movedRef = useRef(false);
   const [drag, setDrag] = useState({ active: false, x: 0, y: 0 });
+  const peekStrength = Math.min(1, Math.max(Math.abs(drag.x) / 42, Math.abs(drag.y) / 42));
   const dragStyle = drag.active
     ? {
         transform: `translate(${drag.x}px, ${drag.y}px) rotate(${drag.x * 0.04}deg)`,
-        transition: 'none'
+        transition: 'none',
+        '--peek-strength': peekStrength,
+        '--peek-rotate': `${Math.max(-10, Math.min(10, drag.x * 0.08))}deg`
       }
     : undefined;
 
@@ -85,6 +88,7 @@ export function PlayingCard({
         'real-card-wrap',
         compact ? 'real-card-compact' : 'real-card-large',
         canReveal && 'real-card-interactive',
+        canReveal && drag.active && 'is-peeking',
         dealt && 'deal-from-deck'
       )}
     >
@@ -93,6 +97,11 @@ export function PlayingCard({
           {card && !serverHidden ? <CardFront card={card} compact={compact} /> : null}
         </div>
         <div className="real-card-face real-card-back" style={{ backgroundImage: `url("${assets.cardBack}")` }}>
+          {canReveal && card ? (
+            <div className={clsx('card-peek-corner', red ? 'card-red' : 'card-black')}>
+              <Corner rank={card.rank} suit={suitSymbol(card.suit)} />
+            </div>
+          ) : null}
           {canReveal ? <span className="peek-tag">{peekLabel}</span> : null}
         </div>
       </div>
