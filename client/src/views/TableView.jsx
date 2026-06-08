@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { DoorOpen, MessageCircle, MoreHorizontal, Send, Undo2 } from 'lucide-react';
+import { DoorOpen, MessageCircle, Send, Undo2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PLAYER_ACTIONS, TABLE_PHASES } from '@blackjack/shared';
 import { ChipButton } from '../components/ChipButton.jsx';
@@ -31,7 +31,6 @@ export function TableView({ table, profile, connected, actions, goLobby }) {
   const canBet = Boolean(viewerSeat && [TABLE_PHASES.betting, TABLE_PHASES.waiting, TABLE_PHASES.settled].includes(table?.phase));
   const activeHand = myTurn ? viewerSeat.hands?.[table.activeHandIndex] : null;
   const canUseAction = Boolean(activeHand && myTurn);
-  const dealerUpcardAce = table?.dealer?.cards?.[0]?.rank === 'A';
   const roundKey = `${table?.id ?? 'none'}:${table?.roundId ?? 'waiting'}`;
   const ownCardIds = useMemo(() => (
     viewerSeat?.hands?.flatMap((hand) => hand.cards.map((card) => card.id)) ?? []
@@ -137,10 +136,6 @@ export function TableView({ table, profile, connected, actions, goLobby }) {
           <div className="deck-anchor">
             <DeckButton disabled={!canUseAction} onDraw={() => actions.playerAction(table.id, PLAYER_ACTIONS.hit)} />
           </div>
-          <div className="status-anchor">
-            <RoundStatus activeSeat={activeSeat} myTurn={myTurn} table={table} />
-          </div>
-
           <div className="opponent-ring">
             {otherSeats.length ? otherSeats.map((seat) => (
               <PlayerSpot
@@ -185,7 +180,6 @@ export function TableView({ table, profile, connected, actions, goLobby }) {
         ) : (
           <ActionDock
             canUseAction={canUseAction}
-            dealerUpcardAce={dealerUpcardAce}
             myTurn={myTurn}
             tableId={table.id}
             actions={actions}
@@ -209,22 +203,17 @@ export function TableView({ table, profile, connected, actions, goLobby }) {
 
 function TableTopBar({ activeSeat, myTurn, openSeats, setShowChat, showChat, table, timerSeconds, viewerSeat, onLeave }) {
   return (
-    <div className="flex min-h-12 items-center justify-between gap-3">
+    <div className="table-topbar flex min-h-11 items-center justify-between gap-3">
       <div className="min-w-0">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <h1 className="truncate text-lg font-black sm:text-xl">{table.name}</h1>
-          <span className="badge">{table.code}</span>
-          <span className="badge">{phaseLabel(table.phase)}</span>
-          {timerSeconds ? <span className="badge border-brass/40 bg-brass/[0.12] text-brass">{timerSeconds}s</span> : null}
-        </div>
-        <p className="mt-0.5 truncate text-xs text-white/50">
-          {myTurn ? 'Lượt của bạn' : activeSeat ? `Lượt ${activeSeat.username}` : `${openSeats} ghế trống`}
+        <p className="truncate text-sm font-black text-ivory sm:text-base">{table.name}</p>
+        <p className="mt-0.5 truncate text-[11px] font-semibold uppercase text-white/42">
+          {table.code} · {phaseLabel(table.phase)} · {myTurn ? 'Lượt của bạn' : activeSeat ? activeSeat.username : `${openSeats} ghế trống`}
         </p>
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
+        {timerSeconds ? <span className="timer-chip">{timerSeconds}s</span> : null}
         <HudPill label="Chips" value={formatNumber(viewerSeat?.chips ?? 0)} />
-        <HudPill label="Hạng" value={viewerSeat?.rank ?? 'View'} />
         <button type="button" onClick={() => setShowChat((value) => !value)} className={showChat ? 'icon-btn bg-brass text-ink' : 'icon-btn'} aria-label="Chat" title="Chat">
           <MessageCircle className="h-4 w-4" />
         </button>
@@ -270,16 +259,6 @@ function DeckButton({ disabled, onDraw }) {
     >
       <span className="deck-label">Bốc</span>
     </button>
-  );
-}
-
-function RoundStatus({ activeSeat, myTurn, table }) {
-  return (
-    <div className="round-console min-w-0 text-right">
-      <p className="text-xs font-semibold uppercase text-white/[0.42]">Sì lát</p>
-      <p className="mt-1 truncate text-sm font-black text-ivory">{myTurn ? 'Bạn quyết định' : activeSeat?.username ?? 'Đang chờ'}</p>
-      <p className="mt-1 text-xs text-white/45">{table.seats.length}/{table.limits.maxPlayers} người</p>
-    </div>
   );
 }
 
@@ -374,14 +353,14 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
 
 function BettingPanel({ bet, setBet, viewerSeat, connected, table, actions }) {
   return (
-    <div className="control-dock rounded-md border border-white/10 bg-ink/80 p-3 backdrop-blur-xl">
-      <div className="grid items-center gap-3 md:grid-cols-[1fr_auto]">
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+    <div className="control-dock compact-dock rounded-md border border-white/10 bg-ink/80 p-2 backdrop-blur-xl">
+      <div className="grid items-center gap-2 md:grid-cols-[1fr_auto]">
+        <div className="flex flex-wrap justify-center gap-1.5 md:justify-start">
           {chipValues.map((value) => (
             <ChipButton key={value} value={value} selected={bet === value} disabled={viewerSeat?.chips < value} onClick={setBet} />
           ))}
         </div>
-        <button type="button" disabled={!connected || !viewerSeat || viewerSeat.chips < bet} onClick={() => actions.placeBet(table.id, bet)} className="btn btn-primary w-full md:w-36">
+        <button type="button" disabled={!connected || !viewerSeat || viewerSeat.chips < bet} onClick={() => actions.placeBet(table.id, bet)} className="btn btn-primary min-h-9 px-3 text-xs md:w-32">
           Chia {formatNumber(bet)}
         </button>
       </div>
@@ -389,38 +368,18 @@ function BettingPanel({ bet, setBet, viewerSeat, connected, table, actions }) {
   );
 }
 
-function ActionDock({ canUseAction, dealerUpcardAce, myTurn, tableId, actions, viewerSeat }) {
-  const [showOptions, setShowOptions] = useState(false);
-
+function ActionDock({ canUseAction, myTurn, tableId, actions, viewerSeat }) {
   return (
-    <div className="control-dock relative rounded-md border border-white/10 bg-ink/80 p-3 backdrop-blur-xl">
-      <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto] sm:items-center">
+    <div className="control-dock compact-dock rounded-md border border-white/10 bg-ink/80 p-2 backdrop-blur-xl">
+      <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
         <div className="min-w-0">
-          <p className="truncate text-sm font-black text-ivory">
+          <p className="truncate text-xs font-black uppercase text-ivory">
             {!viewerSeat ? 'Đang xem bàn' : myTurn ? 'Tay bạn đang chạy' : 'Đang chờ lượt'}
           </p>
-          <p className="mt-0.5 truncate text-xs text-white/45">{myTurn ? 'Bàn đang chờ quyết định.' : 'Giữ nhịp ván.'}</p>
+          <p className="mt-0.5 truncate text-[11px] text-white/42">{myTurn ? 'Bốc ở giữa bàn hoặc dằn.' : 'Giữ nhịp ván.'}</p>
         </div>
-        <ActionButton disabled={!canUseAction} label="Dằn bài" action={PLAYER_ACTIONS.stand} actions={actions} tableId={tableId} primary />
-        <button
-          type="button"
-          disabled={!canUseAction}
-          onClick={() => setShowOptions((value) => !value)}
-          className="btn btn-secondary min-h-10 px-3"
-        >
-          <MoreHorizontal className="h-4 w-4" />
-          Tùy chọn
-        </button>
+        <ActionButton disabled={!canUseAction} label="Dằn" action={PLAYER_ACTIONS.stand} actions={actions} tableId={tableId} primary />
       </div>
-
-      {showOptions ? (
-        <div className="absolute bottom-[calc(100%+8px)] right-3 z-30 grid w-48 gap-2 rounded-md border border-white/10 bg-ink p-2 shadow-table">
-          <ActionButton disabled={!canUseAction} label="X2 cược" action={PLAYER_ACTIONS.double} actions={actions} tableId={tableId} />
-          <ActionButton disabled={!canUseAction} label="Tách bài" action={PLAYER_ACTIONS.split} actions={actions} tableId={tableId} />
-          <ActionButton disabled={!canUseAction || !dealerUpcardAce} label="Bảo hiểm" action={PLAYER_ACTIONS.insurance} actions={actions} tableId={tableId} />
-          <ActionButton disabled={!canUseAction} label="Bỏ bài" action={PLAYER_ACTIONS.surrender} actions={actions} tableId={tableId} danger />
-        </div>
-      ) : null}
     </div>
   );
 }
@@ -454,9 +413,9 @@ function ChatPanel({ table, profile, chatText, setChatText, sendChat }) {
 
 function HudPill({ label, value }) {
   return (
-    <div className="hidden rounded-md border border-white/10 bg-black/25 px-3 py-2 text-right sm:block">
+    <div className="hidden rounded-full border border-white/10 bg-black/22 px-3 py-1.5 text-right sm:block">
       <p className="text-[10px] font-semibold uppercase text-white/[0.42]">{label}</p>
-      <p className="text-sm font-black text-ivory">{value}</p>
+      <p className="text-xs font-black text-ivory">{value}</p>
     </div>
   );
 }
@@ -467,7 +426,7 @@ function ActionButton({ label, action, actions, tableId, disabled, danger = fals
       type="button"
       disabled={disabled}
       onClick={() => actions.playerAction(tableId, action)}
-      className={clsx('btn min-h-10 px-3', primary ? 'btn-primary' : danger ? 'btn-danger' : 'btn-secondary')}
+      className={clsx('btn min-h-9 px-3 text-xs', primary ? 'btn-primary' : danger ? 'btn-danger' : 'btn-secondary')}
     >
       {label}
     </button>

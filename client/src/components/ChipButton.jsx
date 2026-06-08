@@ -1,5 +1,4 @@
 import clsx from 'clsx';
-import { Coins } from 'lucide-react';
 import { formatShort } from '../lib/format.js';
 
 const chipStyles = {
@@ -18,14 +17,14 @@ export function ChipButton({ value, selected, disabled, onClick }) {
       disabled={disabled}
       onClick={() => onClick(value)}
       className={clsx(
-        'relative flex aspect-square min-w-16 flex-col items-center justify-center rounded-full border-4 bg-gradient-to-br p-2 text-xs font-black shadow-lg transition hover:-translate-y-0.5 disabled:opacity-40',
+        'chip-pill relative inline-flex min-h-9 items-center justify-center gap-2 rounded-full border bg-gradient-to-br px-3 text-xs font-black transition hover:-translate-y-0.5 disabled:opacity-40',
         chipStyles[value] ?? chipStyles[100],
-        selected ? 'border-brass ring-4 ring-brass/25' : 'border-white/70'
+        selected ? 'border-brass ring-2 ring-brass/25' : 'border-white/20'
       )}
       aria-label={`Bet ${value} chips`}
       title={`Bet ${value} chips`}
     >
-      <Coins className="h-4 w-4" />
+      <span className="chip-dot" aria-hidden="true" />
       <span>{formatShort(value)}</span>
     </button>
   );
