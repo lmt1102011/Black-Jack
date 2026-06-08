@@ -198,9 +198,9 @@ export function ChatView({ table, profile }) {
 
 function SurfacePage({ title, subtitle, children }) {
   return (
-    <div className="space-y-5">
-      <section className="surface rounded-md p-5">
-        <h1 className="text-2xl font-black">{title}</h1>
+    <div className="space-y-4">
+      <section className="surface rounded-md p-4">
+        <h1 className="text-xl font-black">{title}</h1>
         <p className="muted mt-1">{subtitle}</p>
       </section>
       {children}
@@ -240,17 +240,17 @@ function InfoRow({ label, value }) {
 
 function InfoTile({ icon: Icon, label, value }) {
   return (
-    <div className="surface-soft rounded-md p-5">
-      <Icon className="h-6 w-6 text-brass" />
-      <p className="mt-4 text-sm text-white/50">{label}</p>
-      <p className="mt-1 text-2xl font-black">{value}</p>
+    <div className="surface-soft rounded-md p-4">
+      <Icon className="h-5 w-5 text-brass" />
+      <p className="mt-3 text-sm text-white/50">{label}</p>
+      <p className="mt-1 text-xl font-black">{value}</p>
     </div>
   );
 }
 
 function Toggle({ label, enabled }) {
   return (
-    <div className="surface-soft flex items-center justify-between gap-4 rounded-md p-5">
+    <div className="surface-soft flex items-center justify-between gap-4 rounded-md p-4">
       <span className="font-semibold">{label}</span>
       <button type="button" className={enabled ? 'h-7 w-12 rounded-full bg-brass p-1' : 'h-7 w-12 rounded-full bg-white/15 p-1'} aria-label={label}>
         <span className={enabled ? 'block h-5 w-5 translate-x-5 rounded-full bg-ink transition' : 'block h-5 w-5 rounded-full bg-white/65 transition'} />
