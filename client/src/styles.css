@@ -329,7 +329,7 @@ button:disabled {
 }
 
 .viewer-card-stack .slat-card-slot + .slat-card-slot {
-  margin-left: clamp(-46px, -3.7vw, -30px);
+  margin-left: clamp(-78px, -6.2vw, -52px);
 }
 
 .empty-seat-strip,
@@ -407,6 +407,10 @@ button:disabled {
 
 .real-card-interactive.is-peeking {
   filter: drop-shadow(0 24px 24px rgba(0, 0, 0, 0.46));
+}
+
+.real-card-interactive.is-cover-drag-card {
+  will-change: transform;
 }
 
 .real-card-core {
@@ -517,8 +521,20 @@ button:disabled {
     inset 0 0 0 1px rgba(247, 240, 222, 0.18);
 }
 
+.real-card-core.is-hidden.is-cover-drag .real-card-front {
+  opacity: 0;
+}
+
+.real-card-core.is-hidden.is-cover-drag .real-card-back {
+  transform: translate3d(0, 0, 0) rotate(0deg);
+}
+
 .real-card-core.is-hidden.is-manual-reveal.is-held .real-card-back {
   transition: none;
+}
+
+.real-card-core.is-hidden.is-cover-drag.is-held .real-card-back {
+  transition: box-shadow 120ms ease;
 }
 
 .real-card-core.is-hidden.is-manual-reveal.is-revealing .real-card-back {
@@ -530,6 +546,11 @@ button:disabled {
   transition:
     transform 170ms cubic-bezier(0.2, 0.76, 0.26, 1),
     opacity 150ms ease;
+}
+
+.real-card-core.is-hidden.is-cover-drag.is-revealing .real-card-back {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) rotate(0deg);
 }
 
 .real-card-core.is-hidden.is-manual-reveal .real-card-front {

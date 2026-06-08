@@ -25,7 +25,8 @@ export function PlayingCard({
   dealt = false,
   peekLabel = 'Flip',
   stackedCard = null,
-  weightLevel = 0
+  weightLevel = 0,
+  coverDrag = false
 }) {
   const serverHidden = !card || card.hidden;
   const hidden = Boolean(faceDown ?? serverHidden);
@@ -40,8 +41,13 @@ export function PlayingCard({
   const pullDistance = Math.hypot(drag.x, drag.y);
   const pullStrength = drag.committed ? 1 : Math.min(1, pullDistance / 62);
   const pullRotate = Math.max(-9, Math.min(9, drag.x * 0.075));
+  const coverTransform = coverDrag && (drag.active || drag.committed)
+    ? `translate3d(${drag.x}px, ${drag.y}px, 0) rotate(${pullRotate}deg)`
+    : undefined;
   const cardStyle = canReveal
     ? {
+        transform: coverTransform,
+        transition: coverDrag && drag.active ? 'none' : undefined,
         '--pull-x': `${drag.x}px`,
         '--pull-y': `${drag.y}px`,
         '--pull-strength': pullStrength,
@@ -141,6 +147,7 @@ export function PlayingCard({
         canReveal && 'real-card-interactive',
         canReveal && (drag.active || drag.committed) && 'is-peeking',
         canReveal && stackedCard && 'has-weight-stack',
+        canReveal && coverDrag && 'is-cover-drag-card',
         dealt && 'deal-from-deck'
       )}
     >
@@ -151,6 +158,7 @@ export function PlayingCard({
         'real-card-core',
         hidden ? 'is-hidden' : 'is-visible',
         canReveal && 'is-manual-reveal',
+        canReveal && coverDrag && 'is-cover-drag',
         drag.committed && 'is-revealing',
         drag.active && 'is-held'
       )}

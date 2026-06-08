@@ -37,6 +37,10 @@ export function TableView({ table, profile, connected, actions, goLobby }) {
     viewerSeat?.hands?.flatMap((hand) => hand.cards.map((card) => card.id)) ?? []
   ), [viewerSeat]);
   const ownCardSignature = ownCardIds.join('|');
+  const firstOwnCardIds = useMemo(() => (
+    viewerSeat?.hands?.map((hand) => hand.cards[0]?.id).filter(Boolean) ?? []
+  ), [viewerSeat]);
+  const firstOwnCardSignature = firstOwnCardIds.join('|');
 
   useEffect(() => {
     setRevealedCards(new Set());
@@ -66,6 +70,15 @@ export function TableView({ table, profile, connected, actions, goLobby }) {
 
     previousOwnCardsRef.current = new Set(ownCardIds);
   }, [ownCardSignature, ownCardIds]);
+
+  useEffect(() => {
+    if (!firstOwnCardIds.length) return;
+    setRevealedCards((current) => {
+      const next = new Set(current);
+      for (const id of firstOwnCardIds) next.add(id);
+      return next;
+    });
+  }, [firstOwnCardSignature, firstOwnCardIds]);
 
   function revealCard(cardId) {
     setRevealedCards((current) => {
@@ -293,7 +306,9 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
       {visibleHands.length ? (
         <div className={clsx('grid gap-2', large && visibleHands.length > 1 && 'sm:grid-cols-2')}>
           {visibleHands.map((hand, handIndex) => {
-            const revealedCount = hand.cards.filter((card) => revealAll || revealedCards.has(card.id)).length;
+            const revealedCount = hand.cards.filter((card, cardIndex) => (
+              revealAll || (viewer && ((large && cardIndex === 0) || revealedCards.has(card.id)))
+            )).length;
             const allCardsVisible = revealedCount === hand.cards.length;
             const shouldShowScore = revealAll || (viewer && allCardsVisible);
             const stackCards = viewer && large && !revealAll;
@@ -312,11 +327,15 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
                 )}
                 >
                   {hand.cards.map((card, cardIndex) => {
-                    const faceDown = !(revealAll || (viewer && revealedCards.has(card.id)));
+                    const visibleCard = revealAll || (viewer && ((large && cardIndex === 0) || revealedCards.has(card.id)));
+                    const faceDown = !visibleCard;
                     const previousOpenCard = hand.cards
-                      .slice(0, hand.cards.indexOf(card))
+                      .slice(0, cardIndex)
                       .reverse()
-                      .find((candidate) => revealAll || revealedCards.has(candidate.id));
+                      .find((candidate, reverseIndex) => {
+                        const originalIndex = cardIndex - reverseIndex - 1;
+                        return revealAll || (viewer && ((large && originalIndex === 0) || revealedCards.has(candidate.id)));
+                      });
                     const weightLevel = viewer && faceDown && !revealAll ? revealedCount : 0;
                     return (
                       <div key={card.id} className="slat-card-slot" style={cardSlotStyle(cardIndex, hand.cards.length, stackCards)}>
@@ -330,6 +349,7 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
                           peekLabel="Lật"
                           stackedCard={previousOpenCard}
                           weightLevel={weightLevel}
+                          coverDrag={stackCards && faceDown}
                         />
                       </div>
                     );
