@@ -4,6 +4,17 @@ import { assets } from '../lib/assets.js';
 import { suitSymbol } from '../lib/format.js';
 
 const faceRanks = new Set(['J', 'Q', 'K']);
+const pipLayouts = {
+  2: ['top-center', 'bottom-center'],
+  3: ['top-center', 'middle-center', 'bottom-center'],
+  4: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
+  5: ['top-left', 'top-right', 'middle-center', 'bottom-left', 'bottom-right'],
+  6: ['top-left', 'top-right', 'middle-left', 'middle-right', 'bottom-left', 'bottom-right'],
+  7: ['top-left', 'top-right', 'upper-center', 'middle-left', 'middle-right', 'bottom-left', 'bottom-right'],
+  8: ['top-left', 'top-right', 'upper-center', 'middle-left', 'middle-right', 'lower-center', 'bottom-left', 'bottom-right'],
+  9: ['top-left', 'top-right', 'upper-left', 'upper-right', 'middle-center', 'lower-left', 'lower-right', 'bottom-left', 'bottom-right'],
+  10: ['top-left', 'top-right', 'upper-left', 'upper-right', 'middle-left', 'middle-right', 'lower-left', 'lower-right', 'bottom-left', 'bottom-right']
+};
 
 export function PlayingCard({
   card,
@@ -12,12 +23,16 @@ export function PlayingCard({
   interactive = false,
   onReveal,
   dealt = false,
-  peekLabel = 'Flip'
+  peekLabel = 'Flip',
+  stackedCard = null,
+  weightLevel = 0
 }) {
   const serverHidden = !card || card.hidden;
   const hidden = Boolean(faceDown ?? serverHidden);
   const red = card?.suit === 'hearts' || card?.suit === 'diamonds';
   const canReveal = interactive && hidden && !serverHidden;
+  const cardWeight = canReveal ? Math.min(3, Math.max(0, Number(weightLevel) || 0)) : 0;
+  const dragResistance = Math.max(0.24, 0.42 - cardWeight * 0.055);
   const startRef = useRef(null);
   const movedRef = useRef(false);
   const [drag, setDrag] = useState({ active: false, x: 0, y: 0 });
@@ -27,7 +42,8 @@ export function PlayingCard({
         transform: `translate(${drag.x}px, ${drag.y}px) rotate(${drag.x * 0.04}deg)`,
         transition: 'none',
         '--peek-strength': peekStrength,
-        '--peek-rotate': `${Math.max(-10, Math.min(10, drag.x * 0.08))}deg`
+        '--peek-rotate': `${Math.max(-10, Math.min(10, drag.x * 0.08))}deg`,
+        '--stack-weight': cardWeight
       }
     : undefined;
 
@@ -47,8 +63,8 @@ export function PlayingCard({
     if (!startRef.current || !canReveal) return;
     const rawX = event.clientX - startRef.current.x;
     const rawY = event.clientY - startRef.current.y;
-    const x = rawX * 0.42;
-    const y = rawY * 0.42;
+    const x = rawX * dragResistance;
+    const y = rawY * dragResistance;
     if (Math.abs(rawX) > 6 || Math.abs(rawY) > 6) movedRef.current = true;
     setDrag({ active: true, x, y });
   }
@@ -89,9 +105,13 @@ export function PlayingCard({
         compact ? 'real-card-compact' : 'real-card-large',
         canReveal && 'real-card-interactive',
         canReveal && drag.active && 'is-peeking',
+        canReveal && stackedCard && 'has-weight-stack',
         dealt && 'deal-from-deck'
       )}
     >
+      {canReveal && stackedCard ? (
+        <CardWeightStack card={stackedCard} compact={compact} weightLevel={cardWeight} />
+      ) : null}
       <div className={clsx('real-card-core', hidden ? 'is-hidden' : 'is-visible')}>
         <div className={clsx('real-card-face real-card-front', red ? 'card-red' : 'card-black')}>
           {card && !serverHidden ? <CardFront card={card} compact={compact} /> : null}
@@ -104,6 +124,24 @@ export function PlayingCard({
           ) : null}
           {canReveal ? <span className="peek-tag">{peekLabel}</span> : null}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CardWeightStack({ card, compact, weightLevel }) {
+  const red = card?.suit === 'hearts' || card?.suit === 'diamonds';
+  const suit = suitSymbol(card.suit);
+
+  return (
+    <div
+      className={clsx('card-weight-stack', compact && 'card-weight-stack-compact', red ? 'card-red' : 'card-black')}
+      style={{ '--weight-count': weightLevel }}
+      aria-hidden="true"
+    >
+      <div className="card-weight-paper">
+        <Corner rank={card.rank} suit={suit} />
+        <span className="card-weight-suit">{suit}</span>
       </div>
     </div>
   );
@@ -149,9 +187,9 @@ function renderCenter(rank, suit) {
 
   const count = Number(rank);
   return (
-    <div className={clsx('pip-grid', count > 6 && 'pip-grid-wide')}>
-      {Array.from({ length: count }).map((_, index) => (
-        <span key={index}>{suit}</span>
+    <div className="pip-layout">
+      {(pipLayouts[count] ?? []).map((slot, index) => (
+        <span key={`${slot}-${index}`} className={clsx('pip', `pip-${slot}`)}>{suit}</span>
       ))}
     </div>
   );

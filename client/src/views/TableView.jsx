@@ -102,8 +102,8 @@ export function TableView({ table, profile, connected, actions, goLobby }) {
   }
 
   return (
-    <section className="table-felt relative h-[calc(100vh-1rem)] min-h-[560px] overflow-hidden rounded-md border border-brass/25 p-3 shadow-table sm:p-4">
-      <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-3">
+    <section className="table-felt table-shell relative h-[calc(100svh-1rem)] min-h-0 overflow-hidden rounded-md border border-brass/25 p-2 shadow-table sm:p-3">
+      <div className="relative z-10 grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-2">
         <TableTopBar
           activeSeat={activeSeat}
           myTurn={myTurn}
@@ -116,53 +116,54 @@ export function TableView({ table, profile, connected, actions, goLobby }) {
           onLeave={() => actions.leaveTable(table.id)}
         />
 
-        <div className="felt-rail min-h-0 rounded-md p-3">
-          <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-3">
-            <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3">
-              <DealerArea cards={table.dealer.cards} score={table.dealer.score} />
-              <DeckButton disabled={!canUseAction} onDraw={() => actions.playerAction(table.id, PLAYER_ACTIONS.hit)} />
-              <RoundStatus activeSeat={activeSeat} myTurn={myTurn} table={table} />
-            </div>
+        <div className="slat-stage min-h-0 overflow-hidden rounded-md">
+          <div className="table-center-brand" aria-hidden="true">SÌ LÁT</div>
+          <div className="dealer-anchor">
+            <DealerArea cards={table.dealer.cards} score={table.dealer.score} />
+          </div>
+          <div className="deck-anchor">
+            <DeckButton disabled={!canUseAction} onDraw={() => actions.playerAction(table.id, PLAYER_ACTIONS.hit)} />
+          </div>
+          <div className="status-anchor">
+            <RoundStatus activeSeat={activeSeat} myTurn={myTurn} table={table} />
+          </div>
 
-            <div className="min-h-0">
-              <div className="grid h-full grid-cols-2 gap-2 overflow-hidden md:grid-cols-3 xl:grid-cols-6">
-                {otherSeats.length ? otherSeats.map((seat) => (
-                  <PlayerSpot
-                    key={seat.id}
-                    active={seat.id === table.activeSeatId}
-                    dealtCards={dealtCards}
-                    revealCard={revealCard}
-                    revealedCards={revealedCards}
-                    seat={seat}
-                    tablePhase={table.phase}
-                    viewer={false}
-                  />
-                )) : (
-                  <div className="col-span-full flex items-center justify-center rounded-md border border-dashed border-white/10 bg-black/20 text-sm font-semibold text-white/40">
-                    Đang chờ người chơi khác
-                  </div>
-                )}
+          <div className="opponent-ring">
+            {otherSeats.length ? otherSeats.map((seat) => (
+              <PlayerSpot
+                key={seat.id}
+                active={seat.id === table.activeSeatId}
+                dealtCards={dealtCards}
+                revealCard={revealCard}
+                revealedCards={revealedCards}
+                seat={seat}
+                tablePhase={table.phase}
+                viewer={false}
+              />
+            )) : (
+              <div className="empty-seat-strip">
+                Đang chờ người chơi khác
               </div>
-            </div>
+            )}
+          </div>
 
-            <div className="min-h-0">
-              {viewerSeat ? (
-                <PlayerSpot
-                  active={viewerSeat.id === table.activeSeatId}
-                  dealtCards={dealtCards}
-                  revealCard={revealCard}
-                  revealedCards={revealedCards}
-                  seat={viewerSeat}
-                  tablePhase={table.phase}
-                  viewer
-                  large
-                />
-              ) : (
-                <div className="rounded-md border border-dashed border-white/10 bg-black/20 p-4 text-center text-sm font-semibold text-white/[0.42]">
-                  Bạn đang xem bàn này.
-                </div>
-              )}
-            </div>
+          <div className="viewer-anchor">
+            {viewerSeat ? (
+              <PlayerSpot
+                active={viewerSeat.id === table.activeSeatId}
+                dealtCards={dealtCards}
+                revealCard={revealCard}
+                revealedCards={revealedCards}
+                seat={viewerSeat}
+                tablePhase={table.phase}
+                viewer
+                large
+              />
+            ) : (
+              <div className="spectator-strip">
+                Bạn đang xem bàn này.
+              </div>
+            )}
           </div>
         </div>
 
@@ -200,7 +201,7 @@ function TableTopBar({ activeSeat, myTurn, openSeats, setShowChat, showChat, tab
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <h1 className="truncate text-lg font-black sm:text-xl">{table.name}</h1>
           <span className="badge">{table.code}</span>
-          <span className="badge capitalize">{table.phase}</span>
+          <span className="badge">{phaseLabel(table.phase)}</span>
           {timerSeconds ? <span className="badge border-brass/40 bg-brass/[0.12] text-brass">{timerSeconds}s</span> : null}
         </div>
         <p className="mt-0.5 truncate text-xs text-white/50">
@@ -210,7 +211,7 @@ function TableTopBar({ activeSeat, myTurn, openSeats, setShowChat, showChat, tab
 
       <div className="flex shrink-0 items-center gap-2">
         <HudPill label="Chips" value={formatNumber(viewerSeat?.chips ?? 0)} />
-        <HudPill label="Rank" value={viewerSeat?.rank ?? 'View'} />
+        <HudPill label="Hạng" value={viewerSeat?.rank ?? 'View'} />
         <button type="button" onClick={() => setShowChat((value) => !value)} className={showChat ? 'icon-btn bg-brass text-ink' : 'icon-btn'} aria-label="Chat" title="Chat">
           <MessageCircle className="h-4 w-4" />
         </button>
@@ -224,7 +225,7 @@ function TableTopBar({ activeSeat, myTurn, openSeats, setShowChat, showChat, tab
 
 function DealerArea({ cards, score }) {
   return (
-    <div className="min-w-0 rounded-md border border-white/10 bg-black/20 p-3">
+    <div className="dealer-console min-w-0">
       <div className="mb-2 flex items-center gap-2">
         <img src={assets.dealerBadge} alt="" className="h-9 w-9" />
         <div className="min-w-0">
@@ -232,7 +233,7 @@ function DealerArea({ cards, score }) {
           <p className="truncate text-xs text-white/50">{score?.label ?? 'Một lá đang úp'}</p>
         </div>
       </div>
-      <div className="flex min-h-[116px] items-center gap-2">
+      <div className="dealer-card-row flex min-h-[116px] items-center justify-center gap-2">
         {cards?.length ? cards.map((card) => (
           <PlayingCard key={card.id} card={card} compact={cards.length > 2} />
         )) : (
@@ -249,20 +250,20 @@ function DeckButton({ disabled, onDraw }) {
       type="button"
       disabled={disabled}
       onClick={onDraw}
-      className="deck-button mt-5"
+      className="deck-button"
       style={{ backgroundImage: `url("${assets.cardBack}")` }}
-      aria-label="Rút bài"
-      title="Rút bài"
+      aria-label="Bốc bài"
+      title="Bốc bài"
     >
-      <span className="rounded-full bg-ink/75 px-3 py-1 text-xs font-black uppercase text-brass">Rút</span>
+      <span className="deck-label">Bốc</span>
     </button>
   );
 }
 
 function RoundStatus({ activeSeat, myTurn, table }) {
   return (
-    <div className="min-w-0 rounded-md border border-white/10 bg-black/20 p-3 text-right">
-      <p className="text-xs font-semibold uppercase text-white/[0.42]">Sì lát mode</p>
+    <div className="round-console min-w-0 text-right">
+      <p className="text-xs font-semibold uppercase text-white/[0.42]">Sì lát</p>
       <p className="mt-1 truncate text-sm font-black text-ivory">{myTurn ? 'Bạn quyết định' : activeSeat?.username ?? 'Đang chờ'}</p>
       <p className="mt-1 text-xs text-white/45">{table.seats.length}/{table.limits.maxPlayers} người</p>
     </div>
@@ -275,9 +276,10 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
 
   return (
     <div className={clsx(
-      'min-w-0 rounded-md border transition',
-      large ? 'bg-black/30 p-3' : 'bg-black/[0.24] p-2',
-      active ? 'border-brass shadow-glow' : viewer ? 'border-ruby/55' : 'border-white/10'
+      'player-spot min-w-0 transition',
+      large ? 'viewer-spot p-3' : 'opponent-spot p-2',
+      active && 'is-active',
+      viewer && !large && 'is-viewer'
     )}
     >
       <div className="mb-2 flex items-center justify-between gap-2">
@@ -295,7 +297,7 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
             const allCardsVisible = revealedCount === hand.cards.length;
             const shouldShowScore = revealAll || (viewer && allCardsVisible);
             return (
-              <div key={hand.id} className="rounded-md border border-white/10 bg-white/[0.045] p-2">
+              <div key={hand.id} className="hand-strip p-2">
                 <div className="mb-2 flex items-center justify-between gap-2 text-xs">
                   <span className="font-semibold text-white/[0.52]">{large ? `Tay ${handIndex + 1}` : `T${handIndex + 1}`}</span>
                   <span className={clsx('font-black', hand.result ? resultTone(hand.result) : 'text-white/65')}>
@@ -305,6 +307,11 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
                 <div className={clsx('flex min-h-[82px] items-center', large ? 'gap-2' : 'gap-1')}>
                   {hand.cards.map((card) => {
                     const faceDown = !(revealAll || (viewer && revealedCards.has(card.id)));
+                    const previousOpenCard = hand.cards
+                      .slice(0, hand.cards.indexOf(card))
+                      .reverse()
+                      .find((candidate) => revealAll || revealedCards.has(candidate.id));
+                    const weightLevel = viewer && faceDown && !revealAll ? revealedCount : 0;
                     return (
                       <PlayingCard
                         key={card.id}
@@ -315,6 +322,8 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
                         interactive={viewer && faceDown && !revealAll}
                         onReveal={revealCard}
                         peekLabel="Lật"
+                        stackedCard={previousOpenCard}
+                        weightLevel={weightLevel}
                       />
                     );
                   })}
@@ -328,7 +337,7 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
           })}
         </div>
       ) : (
-        <div className={clsx('flex items-center justify-center rounded-md border border-dashed border-white/10 text-xs font-semibold text-white/35', large ? 'min-h-28' : 'min-h-20')}>
+        <div className={clsx('empty-hand-slot flex items-center justify-center text-xs font-semibold text-white/35', large ? 'min-h-28' : 'min-h-20')}>
           {seat.pendingBet ? `Sẵn sàng - ${formatNumber(seat.pendingBet)}` : 'Đang chờ'}
         </div>
       )}
@@ -338,7 +347,7 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
 
 function BettingPanel({ bet, setBet, viewerSeat, connected, table, actions }) {
   return (
-    <div className="rounded-md border border-white/10 bg-ink/80 p-3 backdrop-blur-xl">
+    <div className="control-dock rounded-md border border-white/10 bg-ink/80 p-3 backdrop-blur-xl">
       <div className="grid items-center gap-3 md:grid-cols-[1fr_auto]">
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
           {chipValues.map((value) => (
@@ -357,13 +366,13 @@ function ActionDock({ canUseAction, dealerUpcardAce, myTurn, tableId, actions, v
   const [showOptions, setShowOptions] = useState(false);
 
   return (
-    <div className="relative rounded-md border border-white/10 bg-ink/80 p-3 backdrop-blur-xl">
+    <div className="control-dock relative rounded-md border border-white/10 bg-ink/80 p-3 backdrop-blur-xl">
       <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto] sm:items-center">
         <div className="min-w-0">
           <p className="truncate text-sm font-black text-ivory">
-            {!viewerSeat ? 'Đang xem bàn' : myTurn ? 'Rút bài ở giữa hoặc dằn bài' : 'Đang chờ lượt'}
+            {!viewerSeat ? 'Đang xem bàn' : myTurn ? 'Tay bạn đang chạy' : 'Đang chờ lượt'}
           </p>
-          <p className="mt-0.5 truncate text-xs text-white/45">Lá úp có thể bấm hoặc kéo để lật từng lá.</p>
+          <p className="mt-0.5 truncate text-xs text-white/45">{myTurn ? 'Bàn đang chờ quyết định.' : 'Giữ nhịp ván.'}</p>
         </div>
         <ActionButton disabled={!canUseAction} label="Dằn bài" action={PLAYER_ACTIONS.stand} actions={actions} tableId={tableId} primary />
         <button
@@ -407,8 +416,8 @@ function ChatPanel({ table, profile, chatText, setChatText, sendChat }) {
         )}
       </div>
       <form onSubmit={sendChat} className="mt-4 flex gap-2">
-        <input className="input" value={chatText} onChange={(event) => setChatText(event.target.value)} placeholder="Message" maxLength={280} />
-        <button type="submit" className="icon-btn h-11 w-11" aria-label="Send chat">
+        <input className="input" value={chatText} onChange={(event) => setChatText(event.target.value)} placeholder="Nhắn trong bàn" maxLength={280} />
+        <button type="submit" className="icon-btn h-11 w-11" aria-label="Gửi chat">
           <Send className="h-5 w-5" />
         </button>
       </form>
@@ -436,6 +445,16 @@ function ActionButton({ label, action, actions, tableId, disabled, danger = fals
       {label}
     </button>
   );
+}
+
+function phaseLabel(phase) {
+  return {
+    waiting: 'Chờ bàn',
+    betting: 'Đặt cược',
+    playing: 'Đang chơi',
+    dealer: 'Nhà cái',
+    settled: 'So bài'
+  }[phase] ?? phase;
 }
 
 function slatScoreLabel(hand) {

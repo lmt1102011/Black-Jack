@@ -121,6 +121,179 @@ button:disabled {
   background-position: center;
 }
 
+.table-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 78%, rgba(216, 173, 95, 0.14), transparent 32%),
+    radial-gradient(ellipse at 50% 48%, transparent 46%, rgba(0, 0, 0, 0.42) 100%);
+  pointer-events: none;
+}
+
+.slat-stage {
+  position: relative;
+  height: 100%;
+  border: 1px solid rgba(216, 173, 95, 0.28);
+  background:
+    radial-gradient(ellipse at 50% 62%, rgba(22, 114, 74, 0.44), rgba(8, 36, 25, 0.54) 46%, rgba(3, 9, 7, 0.66) 78%),
+    linear-gradient(140deg, rgba(247, 240, 222, 0.08), transparent 22%, rgba(207, 62, 79, 0.08) 78%, transparent);
+  box-shadow:
+    inset 0 0 0 9px rgba(8, 11, 13, 0.45),
+    inset 0 0 0 13px rgba(216, 173, 95, 0.14),
+    inset 0 0 80px rgba(0, 0, 0, 0.5);
+  isolation: isolate;
+}
+
+.slat-stage::before {
+  content: "";
+  position: absolute;
+  inset: 7%;
+  border: 1px solid rgba(247, 240, 222, 0.16);
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 18px rgba(8, 11, 13, 0.14),
+    inset 0 0 36px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+}
+
+.table-center-brand {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  z-index: 0;
+  transform: translate(-50%, -50%) rotate(-4deg);
+  color: rgba(247, 240, 222, 0.08);
+  font-size: clamp(3.2rem, 11vw, 10rem);
+  font-weight: 950;
+  line-height: 1;
+  pointer-events: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dealer-anchor {
+  position: absolute;
+  left: 50%;
+  top: clamp(8px, 2vh, 18px);
+  z-index: 4;
+  width: min(500px, 58vw);
+  transform: translateX(-50%);
+}
+
+.deck-anchor {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  z-index: 5;
+  transform: translate(-50%, -50%);
+}
+
+.status-anchor {
+  position: absolute;
+  right: clamp(8px, 2vw, 22px);
+  top: clamp(8px, 2vh, 18px);
+  z-index: 5;
+  width: min(210px, 24vw);
+}
+
+.opponent-ring {
+  position: absolute;
+  left: clamp(8px, 2vw, 24px);
+  right: clamp(8px, 2vw, 24px);
+  top: clamp(132px, 26%, 190px);
+  z-index: 3;
+  display: grid;
+  max-height: 34%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  overflow: hidden;
+}
+
+.viewer-anchor {
+  position: absolute;
+  left: clamp(8px, 2vw, 30px);
+  right: clamp(8px, 2vw, 30px);
+  bottom: clamp(8px, 2vh, 18px);
+  z-index: 6;
+}
+
+.dealer-console,
+.round-console,
+.player-spot,
+.control-dock {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(5, 12, 10, 0.5);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(16px);
+}
+
+.dealer-console,
+.round-console,
+.player-spot {
+  border-radius: 8px;
+}
+
+.dealer-console {
+  padding: 10px;
+}
+
+.round-console {
+  padding: 12px;
+}
+
+.player-spot {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.player-spot.is-active {
+  border-color: rgba(216, 173, 95, 0.92);
+  box-shadow:
+    0 0 0 1px rgba(216, 173, 95, 0.28),
+    0 18px 50px rgba(216, 173, 95, 0.14),
+    0 20px 48px rgba(0, 0, 0, 0.32);
+}
+
+.viewer-spot {
+  background:
+    linear-gradient(180deg, rgba(10, 22, 18, 0.82), rgba(5, 12, 10, 0.72)),
+    rgba(8, 11, 13, 0.78);
+}
+
+.opponent-spot {
+  background: rgba(5, 12, 10, 0.44);
+}
+
+.hand-strip {
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(247, 240, 222, 0.065), rgba(247, 240, 222, 0.025));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.075);
+}
+
+.empty-seat-strip,
+.spectator-strip,
+.empty-hand-slot {
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.empty-seat-strip,
+.spectator-strip {
+  display: flex;
+  min-height: 86px;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.dealer-card-row {
+  overflow: hidden;
+}
+
 .card-enter {
   animation: card-enter 160ms ease-out both;
 }
@@ -145,6 +318,10 @@ button:disabled {
   user-select: none;
   filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.28));
   transition: transform 180ms ease, filter 180ms ease;
+}
+
+.real-card-wrap.has-weight-stack {
+  isolation: isolate;
 }
 
 .real-card-large {
@@ -172,10 +349,57 @@ button:disabled {
 
 .real-card-core {
   position: relative;
+  z-index: 2;
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
   transition: transform 360ms cubic-bezier(0.2, 0.85, 0.2, 1);
+}
+
+.card-weight-stack {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  transform:
+    translate(
+      calc(-7px - var(--peek-strength, 0) * 10px),
+      calc(8px + var(--peek-strength, 0) * 5px)
+    )
+    rotate(calc(-4deg - var(--peek-strength, 0) * 4deg));
+  transform-origin: center bottom;
+  opacity: calc(0.7 + var(--peek-strength, 0) * 0.22);
+  transition: transform 140ms ease, opacity 140ms ease;
+}
+
+.card-weight-paper {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(247, 240, 222, 0.94)),
+    #f7f0de;
+  padding: 8px;
+  box-shadow:
+    0 9px 20px rgba(0, 0, 0, 0.28),
+    inset 0 0 0 4px rgba(255, 255, 255, 0.36),
+    inset 0 0 0 5px rgba(20, 20, 20, 0.08);
+}
+
+.card-weight-stack-compact .card-weight-paper {
+  padding: 6px;
+}
+
+.card-weight-suit {
+  align-self: center;
+  justify-self: center;
+  font-size: clamp(32px, 5vw, 58px);
+  line-height: 1;
+  opacity: 0.42;
 }
 
 .real-card-core.is-hidden {
@@ -287,23 +511,35 @@ button:disabled {
   padding: 2px 4px;
 }
 
-.pip-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: center;
-  justify-items: center;
+.pip-layout {
+  position: relative;
   width: 100%;
-  max-width: 62px;
-  gap: 2px 12px;
-  font-size: clamp(18px, 2.3vw, 30px);
-  line-height: 0.9;
+  height: 100%;
+  min-height: 54px;
+  font-size: clamp(18px, 2.15vw, 30px);
+  line-height: 1;
 }
 
-.pip-grid-wide {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2px 7px;
-  font-size: clamp(15px, 1.8vw, 23px);
+.pip {
+  position: absolute;
+  transform: translate(-50%, -50%);
 }
+
+.pip-top-left { left: 25%; top: 15%; }
+.pip-top-center { left: 50%; top: 16%; }
+.pip-top-right { left: 75%; top: 15%; }
+.pip-upper-left { left: 25%; top: 31%; }
+.pip-upper-center { left: 50%; top: 31%; }
+.pip-upper-right { left: 75%; top: 31%; }
+.pip-middle-left { left: 25%; top: 50%; }
+.pip-middle-center { left: 50%; top: 50%; }
+.pip-middle-right { left: 75%; top: 50%; }
+.pip-lower-left { left: 25%; top: 69%; }
+.pip-lower-center { left: 50%; top: 69%; }
+.pip-lower-right { left: 75%; top: 69%; }
+.pip-bottom-left { left: 25%; top: 85%; }
+.pip-bottom-center { left: 50%; top: 84%; }
+.pip-bottom-right { left: 75%; top: 85%; }
 
 .ace-pip {
   font-size: clamp(40px, 6vw, 72px);
@@ -343,22 +579,23 @@ button:disabled {
 }
 
 .deal-from-deck {
-  animation: deal-from-deck 460ms cubic-bezier(0.17, 0.84, 0.24, 1.08) both;
+  animation: deal-from-deck 560ms cubic-bezier(0.17, 0.84, 0.24, 1.08) both;
 }
 
 @keyframes deal-from-deck {
   from {
     opacity: 0;
-    transform: translateY(-165px) scale(0.72) rotate(-11deg);
+    transform: translate3d(0, -34vh, 0) scale(0.62) rotate(-16deg);
   }
 
-  62% {
+  56% {
     opacity: 1;
+    transform: translate3d(0, 16px, 0) scale(1.03) rotate(3deg);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0) scale(1) rotate(0);
+    transform: translate3d(0, 0, 0) scale(1) rotate(0);
   }
 }
 
@@ -392,6 +629,17 @@ button:disabled {
   opacity: 0.5;
 }
 
+.deck-label {
+  border-radius: 999px;
+  background: rgba(8, 11, 13, 0.76);
+  padding: 0.25rem 0.75rem;
+  color: #d8ad5f;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
 .felt-rail {
   border: 1px solid rgba(216, 173, 95, 0.24);
   background: rgba(3, 8, 6, 0.28);
@@ -404,4 +652,89 @@ button:disabled {
 
 .card-black {
   color: #0d1614;
+}
+
+@media (min-width: 960px) {
+  .opponent-ring {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .dealer-anchor {
+    width: min(360px, 66vw);
+  }
+
+  .status-anchor {
+    display: none;
+  }
+
+  .opponent-ring {
+    top: clamp(124px, 24%, 160px);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .round-console {
+    padding: 10px;
+  }
+}
+
+@media (max-height: 720px) {
+  .dealer-anchor {
+    top: 6px;
+  }
+
+  .dealer-console {
+    padding: 8px;
+  }
+
+  .dealer-card-row {
+    min-height: 86px;
+  }
+
+  .deck-anchor {
+    top: 44%;
+  }
+
+  .opponent-ring {
+    top: 116px;
+    max-height: 30%;
+  }
+
+  .viewer-anchor {
+    bottom: 6px;
+  }
+
+  .control-dock {
+    padding: 0.5rem;
+  }
+
+  .real-card-large {
+    width: clamp(66px, 8.2vw, 98px);
+    height: clamp(92px, 11.5vw, 138px);
+  }
+
+  .real-card-compact {
+    width: clamp(48px, 5.2vw, 66px);
+    height: clamp(68px, 7.4vw, 92px);
+  }
+
+  .deck-button {
+    width: clamp(72px, 8vw, 98px);
+    height: clamp(100px, 11.2vw, 138px);
+  }
+}
+
+@media (max-height: 620px) {
+  .opponent-ring {
+    display: none;
+  }
+
+  .dealer-console .real-card-wrap:nth-of-type(n+4) {
+    display: none;
+  }
+
+  .deck-anchor {
+    top: 42%;
+  }
 }
