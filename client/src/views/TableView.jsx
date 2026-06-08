@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { DoorOpen, MessageCircle, Send, Undo2 } from 'lucide-react';
+import { DoorOpen, MessageCircle, MoreHorizontal, Send, Undo2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PLAYER_ACTIONS, TABLE_PHASES } from '@blackjack/shared';
 import { ChipButton } from '../components/ChipButton.jsx';
@@ -354,17 +354,37 @@ function BettingPanel({ bet, setBet, viewerSeat, connected, table, actions }) {
 }
 
 function ActionDock({ canUseAction, dealerUpcardAce, myTurn, tableId, actions, viewerSeat }) {
+  const [showOptions, setShowOptions] = useState(false);
+
   return (
-    <div className="rounded-md border border-white/10 bg-ink/80 p-3 backdrop-blur-xl">
-      <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto_auto] sm:items-center">
-        <p className="text-sm font-semibold text-white/[0.58]">
-          {!viewerSeat ? 'Đang xem bàn' : myTurn ? 'Bấm bộ bài để rút, hoặc dằn bài.' : 'Đang chờ lượt.'}
-        </p>
-        <ActionButton disabled={!canUseAction} label="Dằn" action={PLAYER_ACTIONS.stand} actions={actions} tableId={tableId} />
-        <ActionButton disabled={!canUseAction} label="X2" action={PLAYER_ACTIONS.double} actions={actions} tableId={tableId} />
-        <ActionButton disabled={!canUseAction} label="Tách" action={PLAYER_ACTIONS.split} actions={actions} tableId={tableId} />
-        <ActionButton disabled={!canUseAction || !dealerUpcardAce} label="Bảo hiểm" action={PLAYER_ACTIONS.insurance} actions={actions} tableId={tableId} />
+    <div className="relative rounded-md border border-white/10 bg-ink/80 p-3 backdrop-blur-xl">
+      <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto] sm:items-center">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-black text-ivory">
+            {!viewerSeat ? 'Đang xem bàn' : myTurn ? 'Rút bài ở giữa hoặc dằn bài' : 'Đang chờ lượt'}
+          </p>
+          <p className="mt-0.5 truncate text-xs text-white/45">Lá úp có thể bấm hoặc kéo để lật từng lá.</p>
+        </div>
+        <ActionButton disabled={!canUseAction} label="Dằn bài" action={PLAYER_ACTIONS.stand} actions={actions} tableId={tableId} primary />
+        <button
+          type="button"
+          disabled={!canUseAction}
+          onClick={() => setShowOptions((value) => !value)}
+          className="btn btn-secondary min-h-10 px-3"
+        >
+          <MoreHorizontal className="h-4 w-4" />
+          Tùy chọn
+        </button>
       </div>
+
+      {showOptions ? (
+        <div className="absolute bottom-[calc(100%+8px)] right-3 z-30 grid w-48 gap-2 rounded-md border border-white/10 bg-ink p-2 shadow-table">
+          <ActionButton disabled={!canUseAction} label="X2 cược" action={PLAYER_ACTIONS.double} actions={actions} tableId={tableId} />
+          <ActionButton disabled={!canUseAction} label="Tách bài" action={PLAYER_ACTIONS.split} actions={actions} tableId={tableId} />
+          <ActionButton disabled={!canUseAction || !dealerUpcardAce} label="Bảo hiểm" action={PLAYER_ACTIONS.insurance} actions={actions} tableId={tableId} />
+          <ActionButton disabled={!canUseAction} label="Bỏ bài" action={PLAYER_ACTIONS.surrender} actions={actions} tableId={tableId} danger />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -405,13 +425,13 @@ function HudPill({ label, value }) {
   );
 }
 
-function ActionButton({ label, action, actions, tableId, disabled }) {
+function ActionButton({ label, action, actions, tableId, disabled, danger = false, primary = false }) {
   return (
     <button
       type="button"
       disabled={disabled}
       onClick={() => actions.playerAction(tableId, action)}
-      className="btn btn-secondary min-h-10 px-3"
+      className={clsx('btn min-h-10 px-3', primary ? 'btn-primary' : danger ? 'btn-danger' : 'btn-secondary')}
     >
       {label}
     </button>
