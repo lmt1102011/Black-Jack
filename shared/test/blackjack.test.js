@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  TABLE_PHASES,
   canSplit,
   createHand,
   handScore,
   isBlackjack,
+  sanitizeTableForClient,
   settleHand
 } from '../src/index.js';
 
@@ -34,4 +36,41 @@ test('settles push when totals tie', () => {
 
 test('allows splitting equal ten-value cards', () => {
   assert.equal(canSplit(createHand([card('K'), card('10')], 100), 100), true);
+});
+
+test('sanitizes private player cards per viewer during play', () => {
+  const table = {
+    id: 'table-1',
+    roundId: 'round-1',
+    phase: TABLE_PHASES.playing,
+    turnDeadline: null,
+    settleAt: null,
+    dealer: { cards: [card('9'), card('K')] },
+    seats: [
+      {
+        id: 'seat-1',
+        playerId: 'player-1',
+        hands: [createHand([card('A', 'hearts'), card('7', 'clubs')], 100)]
+      },
+      {
+        id: 'seat-2',
+        playerId: 'player-2',
+        hands: [createHand([card('Q', 'diamonds'), card('3', 'clubs')], 100)]
+      }
+    ],
+    shoe: [card('2')],
+    discard: [card('4')]
+  };
+
+  const state = sanitizeTableForClient(table, 'player-1');
+
+  assert.equal(state.shoe, undefined);
+  assert.equal(state.discard, undefined);
+  assert.equal(state.seats[0].isViewer, true);
+  assert.equal(state.seats[0].hands[0].cards[0].rank, 'A');
+  assert.equal(state.seats[0].hands[0].score.total, 18);
+  assert.equal(state.seats[1].isViewer, false);
+  assert.equal(state.seats[1].hands[0].cards[0].hidden, true);
+  assert.equal(state.seats[1].hands[0].cards[0].rank, undefined);
+  assert.equal(state.seats[1].hands[0].score, null);
 });

@@ -10,6 +10,7 @@ import { resolveSocketPlayer } from './auth/socketAuth.js';
 import { TableManager } from './game/tableManager.js';
 import {
   betSchema,
+  cardPeekSchema,
   chatSchema,
   joinTableSchema,
   parsePayload,
@@ -134,6 +135,16 @@ io.on('connection', (socket) => {
   socket.on(CLIENT_EVENTS.playerAction, withSocketGuard(socket, 'action', (payload) => {
     const { tableId, action } = parsePayload(playerActionSchema, payload);
     manager.playerAction(player.id, tableId, action);
+  }));
+
+  socket.on(CLIENT_EVENTS.cardPeek, withSocketGuard(socket, 'peek', (payload) => {
+    guardSocketRate(socket, 'peekPulse', 18, 2_000);
+    const { tableId, handId, cardIndex, active } = parsePayload(cardPeekSchema, payload);
+    const peek = manager.describePeek(player.id, tableId, handId, cardIndex);
+    socket.to(tableId).emit(SERVER_EVENTS.cardPeek, {
+      ...peek,
+      active
+    });
   }));
 
   socket.on(CLIENT_EVENTS.chatMessage, withSocketGuard(socket, 'chat', (payload) => {

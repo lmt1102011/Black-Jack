@@ -450,8 +450,8 @@ button:disabled {
   filter: drop-shadow(0 24px 24px rgba(0, 0, 0, 0.46));
 }
 
-.real-card-interactive.is-cover-drag-card {
-  will-change: transform;
+.real-card-wrap.is-remote-peeking .real-card-core.is-hidden .real-card-back {
+  animation: remote-card-peek 960ms ease-in-out infinite;
 }
 
 .real-card-core {
@@ -459,50 +459,24 @@ button:disabled {
   z-index: 2;
   width: 100%;
   height: 100%;
+  transform-style: preserve-3d;
   transition: filter 180ms ease;
 }
 
-.card-weight-stack {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  transform:
-    translate3d(var(--stack-x, -7px), var(--stack-y, 7px), 0)
-    rotate(var(--stack-rotate, -3deg));
-  transform-origin: center bottom;
-  opacity: var(--stack-opacity, 0.32);
-  transition: transform 140ms ease, opacity 140ms ease;
-}
+@keyframes remote-card-peek {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    box-shadow:
+      0 7px 14px rgba(0, 0, 0, 0.28),
+      inset 0 0 0 1px rgba(247, 240, 222, 0.16);
+  }
 
-.card-weight-paper {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.16);
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(247, 240, 222, 0.94)),
-    #f7f0de;
-  padding: 8px;
-  box-shadow:
-    0 9px 20px rgba(0, 0, 0, 0.28),
-    inset 0 0 0 4px rgba(255, 255, 255, 0.36),
-    inset 0 0 0 5px rgba(20, 20, 20, 0.08);
-}
-
-.card-weight-stack-compact .card-weight-paper {
-  padding: 6px;
-}
-
-.card-weight-suit {
-  align-self: center;
-  justify-self: center;
-  font-size: clamp(32px, 5vw, 58px);
-  line-height: 1;
-  opacity: 0.42;
+  45% {
+    transform: translate3d(1px, -2px, 0) rotate(0.7deg);
+    box-shadow:
+      0 11px 18px rgba(0, 0, 0, 0.34),
+      inset 0 0 0 1px rgba(247, 240, 222, 0.18);
+  }
 }
 
 .real-card-core.is-hidden {
@@ -553,52 +527,57 @@ button:disabled {
   pointer-events: none;
 }
 
-.real-card-core.is-hidden.is-manual-reveal .real-card-back {
-  transform:
-    translate3d(var(--pull-x, 0px), var(--pull-y, 0px), 0)
-    rotate(var(--pull-rotate, 0deg));
-  box-shadow:
-    0 var(--cover-shadow-y, 12px) var(--cover-shadow-blur, 18px) rgba(0, 0, 0, 0.38),
-    inset 0 0 0 1px rgba(247, 240, 222, 0.18);
-}
-
-.real-card-core.is-hidden.is-cover-drag .real-card-front {
-  opacity: 0;
-}
-
-.real-card-core.is-hidden.is-cover-drag .real-card-back {
-  transform: translate3d(0, 0, 0) rotate(0deg);
-}
-
-.real-card-core.is-hidden.is-manual-reveal.is-held .real-card-back {
-  transition: none;
-}
-
-.real-card-core.is-hidden.is-cover-drag.is-held .real-card-back {
-  transition: box-shadow 120ms ease;
-}
-
-.real-card-core.is-hidden.is-manual-reveal.is-revealing .real-card-back {
-  opacity: 0;
-  transform:
-    translate3d(var(--pull-x, 76px), var(--pull-y, -14px), 0)
-    rotate(var(--pull-rotate, 8deg))
-    scale(0.98);
-  transition:
-    transform 170ms cubic-bezier(0.2, 0.76, 0.26, 1),
-    opacity 150ms ease;
-}
-
-.real-card-core.is-hidden.is-cover-drag.is-revealing .real-card-back {
-  opacity: 1;
-  transform: translate3d(0, 0, 0) rotate(0deg);
-}
-
-.real-card-core.is-hidden.is-manual-reveal .real-card-front {
+.real-card-core.is-hidden.is-peekable .real-card-front {
   box-shadow:
     inset 0 0 0 4px rgba(255, 255, 255, 0.48),
     inset 0 0 0 5px rgba(20, 20, 20, 0.08),
-    0 0 0 var(--front-ring, 0px) rgba(216, 173, 95, 0.3);
+    inset 0 18px 32px rgba(255, 255, 255, 0.18);
+}
+
+.real-card-core.is-hidden.is-peeking-local .real-card-back {
+  transform:
+    perspective(760px)
+    translate3d(var(--peek-back-shift-x, 0px), var(--peek-back-shift-y, 0px), 10px)
+    rotateX(var(--peek-rotate-x, 0deg))
+    rotateY(var(--peek-rotate-y, 0deg))
+    rotateZ(var(--peek-rotate-z, 0deg));
+  box-shadow:
+    0 var(--peek-shadow-y, 8px) var(--peek-shadow-blur, 14px) rgba(0, 0, 0, 0.42),
+    inset 0 0 0 1px rgba(247, 240, 222, 0.2),
+    inset 0 18px 28px rgba(255, 255, 255, 0.055);
+  will-change: clip-path, transform;
+}
+
+.real-card-core.peek-corner-tl .real-card-back {
+  transform-origin: 100% 100%;
+}
+
+.real-card-core.peek-corner-tr .real-card-back {
+  transform-origin: 0 100%;
+}
+
+.real-card-core.peek-corner-bl .real-card-back {
+  transform-origin: 100% 0;
+}
+
+.real-card-core.peek-corner-br .real-card-back {
+  transform-origin: 0 0;
+}
+
+.real-card-core.is-hidden.is-peeking-local.peek-corner-tl .real-card-back {
+  clip-path: polygon(var(--peek-cut, 0px) 0, 100% 0, 100% 100%, 0 100%, 0 var(--peek-cut, 0px));
+}
+
+.real-card-core.is-hidden.is-peeking-local.peek-corner-tr .real-card-back {
+  clip-path: polygon(0 0, calc(100% - var(--peek-cut, 0px)) 0, 100% var(--peek-cut, 0px), 100% 100%, 0 100%);
+}
+
+.real-card-core.is-hidden.is-peeking-local.peek-corner-bl .real-card-back {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, var(--peek-cut, 0px) 100%, 0 calc(100% - var(--peek-cut, 0px)));
+}
+
+.real-card-core.is-hidden.is-peeking-local.peek-corner-br .real-card-back {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--peek-cut, 0px)), calc(100% - var(--peek-cut, 0px)) 100%, 0 100%);
 }
 
 .peek-groove {
@@ -610,7 +589,117 @@ button:disabled {
   border-radius: 999px;
   background:
     linear-gradient(90deg, transparent, rgba(247, 240, 222, 0.55), transparent);
-  opacity: var(--groove-opacity, 0.28);
+  opacity: var(--peek-groove-opacity, 0.18);
+}
+
+.peek-light {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at var(--peek-light-x, 50%) var(--peek-light-y, 18%), rgba(255, 255, 255, 0.24), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 32%, rgba(0, 0, 0, 0.12) 88%);
+  mix-blend-mode: screen;
+  opacity: var(--peek-light-opacity, 0);
+}
+
+.peek-fold {
+  position: absolute;
+  z-index: 5;
+  width: var(--peek-fold-size, 0px);
+  height: var(--peek-fold-size, 0px);
+  border-radius: 7px;
+  background-size: cover;
+  background-position: center;
+  box-shadow:
+    0 calc(var(--peek-shadow-y, 8px) * 0.55) calc(var(--peek-shadow-blur, 12px) * 0.72) rgba(0, 0, 0, 0.38),
+    inset 0 0 0 1px rgba(247, 240, 222, 0.18),
+    inset 10px 10px 18px rgba(255, 255, 255, 0.12);
+  opacity: var(--peek-fold-opacity, 0);
+  pointer-events: none;
+  transform-style: preserve-3d;
+  will-change: transform, opacity, width, height;
+}
+
+.peek-fold::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), transparent 42%, rgba(0, 0, 0, 0.18));
+  opacity: var(--peek-fold-shine, 0.22);
+}
+
+.peek-corner-tl .peek-light {
+  --peek-light-x: 13%;
+  --peek-light-y: 13%;
+}
+
+.peek-corner-tr .peek-light {
+  --peek-light-x: 87%;
+  --peek-light-y: 13%;
+}
+
+.peek-corner-bl .peek-light {
+  --peek-light-x: 13%;
+  --peek-light-y: 87%;
+}
+
+.peek-corner-br .peek-light {
+  --peek-light-x: 87%;
+  --peek-light-y: 87%;
+}
+
+.peek-corner-tl .peek-fold {
+  left: 0;
+  top: 0;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  transform-origin: 100% 100%;
+  transform:
+    translate3d(var(--peek-fold-shift-x, 0px), var(--peek-fold-shift-y, 0px), 22px)
+    perspective(640px)
+    rotateX(var(--peek-fold-x, 0deg))
+    rotateY(var(--peek-fold-y, 0deg))
+    rotateZ(var(--peek-fold-z, 0deg));
+}
+
+.peek-corner-tr .peek-fold {
+  right: 0;
+  top: 0;
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
+  transform-origin: 0 100%;
+  transform:
+    translate3d(var(--peek-fold-shift-x, 0px), var(--peek-fold-shift-y, 0px), 22px)
+    perspective(640px)
+    rotateX(var(--peek-fold-x, 0deg))
+    rotateY(var(--peek-fold-y, 0deg))
+    rotateZ(var(--peek-fold-z, 0deg));
+}
+
+.peek-corner-bl .peek-fold {
+  left: 0;
+  bottom: 0;
+  clip-path: polygon(0 100%, 0 0, 100% 100%);
+  transform-origin: 100% 0;
+  transform:
+    translate3d(var(--peek-fold-shift-x, 0px), var(--peek-fold-shift-y, 0px), 22px)
+    perspective(640px)
+    rotateX(var(--peek-fold-x, 0deg))
+    rotateY(var(--peek-fold-y, 0deg))
+    rotateZ(var(--peek-fold-z, 0deg));
+}
+
+.peek-corner-br .peek-fold {
+  right: 0;
+  bottom: 0;
+  clip-path: polygon(100% 100%, 0 100%, 100% 0);
+  transform-origin: 0 0;
+  transform:
+    translate3d(var(--peek-fold-shift-x, 0px), var(--peek-fold-shift-y, 0px), 22px)
+    perspective(640px)
+    rotateX(var(--peek-fold-x, 0deg))
+    rotateY(var(--peek-fold-y, 0deg))
+    rotateZ(var(--peek-fold-z, 0deg));
 }
 
 .real-card-interactive::before {
@@ -620,8 +709,8 @@ button:disabled {
   z-index: -1;
   border-radius: 14px;
   background: radial-gradient(circle, rgba(216, 173, 95, 0.2), transparent 60%);
-  opacity: var(--halo-opacity, 0);
-  transform: scale(var(--halo-scale, 0.9));
+  opacity: var(--peek-halo-opacity, 0);
+  transform: scale(var(--peek-halo-scale, 0.92));
 }
 
 .real-card-inner {

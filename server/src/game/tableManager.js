@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import {
   CLIENT_EVENTS,
   PLAYER_ACTIONS,
+  SERVER_EVENTS,
   TABLE_LIMITS,
   TABLE_PHASES,
   canDouble,
@@ -295,14 +296,36 @@ export class TableManager {
     return message;
   }
 
+  describePeek(playerId, tableId, handId, cardIndex) {
+    const table = this.requireTable(tableId);
+    const seat = this.requireSeat(table, playerId);
+    if (table.phase !== TABLE_PHASES.playing) {
+      throw new Error('Cards can only be peeked during active play.');
+    }
+    const hand = seat.hands.find((candidate) => candidate.id === handId);
+    if (!hand || !hand.cards[cardIndex]) {
+      throw new Error('Card not found.');
+    }
+    return {
+      tableId: table.id,
+      seatId: seat.id,
+      handId,
+      cardIndex
+    };
+  }
+
   emitTable(tableId) {
     const table = this.tables.get(tableId);
     if (!table) return;
-    this.io.to(table.id).emit('table:state', sanitizeTableForClient(table));
+    for (const socket of this.io.sockets.sockets.values()) {
+      if (socket.rooms.has(table.id)) {
+        socket.emit(SERVER_EVENTS.tableState, sanitizeTableForClient(table, socket.data.player?.id));
+      }
+    }
   }
 
   broadcastLobby() {
-    this.io.emit('lobby:update', this.listTables());
+    this.io.emit(SERVER_EVENTS.lobbyUpdate, this.listTables());
   }
 
   toLobbyRow(table) {

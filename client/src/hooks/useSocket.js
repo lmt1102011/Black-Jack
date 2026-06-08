@@ -11,6 +11,7 @@ export function useSocket(profile, getToken) {
   const [table, setTable] = useState(null);
   const [notice, setNotice] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [remotePeeks, setRemotePeeks] = useState({});
 
   useEffect(() => {
     if (!profile) return undefined;
@@ -38,6 +39,28 @@ export function useSocket(profile, getToken) {
       socket.on('disconnect', () => setConnected(false));
       socket.on(SERVER_EVENTS.lobbyUpdate, setLobby);
       socket.on(SERVER_EVENTS.tableState, (state) => setTable(state));
+      socket.on(SERVER_EVENTS.cardPeek, (peek) => {
+        const key = `${peek.tableId}:${peek.seatId}:${peek.handId}:${peek.cardIndex}`;
+        if (!peek.active) {
+          setRemotePeeks((current) => {
+            const next = { ...current };
+            delete next[key];
+            return next;
+          });
+          return;
+        }
+
+        const stamp = Date.now();
+        setRemotePeeks((current) => ({ ...current, [key]: stamp }));
+        window.setTimeout(() => {
+          setRemotePeeks((current) => {
+            if (current[key] !== stamp) return current;
+            const next = { ...current };
+            delete next[key];
+            return next;
+          });
+        }, 3500);
+      });
       socket.on(SERVER_EVENTS.tableError, (error) => setNotice({ type: 'error', ...error }));
       socket.on(SERVER_EVENTS.toast, setNotice);
       socket.on(CLIENT_EVENTS.chatMessage, (message) => {
@@ -54,6 +77,7 @@ export function useSocket(profile, getToken) {
       setConnected(false);
       setTable(null);
       setMessages([]);
+      setRemotePeeks({});
     };
   }, [getToken, profile]);
 
@@ -71,6 +95,7 @@ export function useSocket(profile, getToken) {
     leaveTable: (tableId) => emit(CLIENT_EVENTS.leaveTable, { tableId }),
     placeBet: (tableId, amount) => emit(CLIENT_EVENTS.placeBet, { tableId, amount }),
     playerAction: (tableId, action) => emit(CLIENT_EVENTS.playerAction, { tableId, action }),
+    cardPeek: (tableId, handId, cardIndex, active) => emit(CLIENT_EVENTS.cardPeek, { tableId, handId, cardIndex, active }),
     sendChat: (tableId, text) => emit(CLIENT_EVENTS.chatMessage, { tableId, text })
   }), [emit]);
 
@@ -80,6 +105,7 @@ export function useSocket(profile, getToken) {
     table,
     notice,
     messages,
+    remotePeeks,
     clearNotice: () => setNotice(null),
     actions
   };

@@ -159,6 +159,7 @@ export function settleHand(hand, dealerCards) {
 
 export function sanitizeTableForClient(table, viewerId = null) {
   const revealDealer = ['dealer', 'settled'].includes(table.phase);
+  const revealPlayers = ['dealer', 'settled'].includes(table.phase);
 
   return {
     ...table,
@@ -177,14 +178,23 @@ export function sanitizeTableForClient(table, viewerId = null) {
       )),
       score: revealDealer ? handScore(table.dealer.cards) : null
     },
-    seats: table.seats.map((seat) => ({
-      ...seat,
-      isViewer: seat.playerId === viewerId,
-      hands: seat.hands.map((hand) => ({
-        ...hand,
-        score: handScore(hand.cards)
-      }))
-    }))
+    seats: table.seats.map((seat) => {
+      const isViewer = seat.playerId === viewerId;
+      return {
+        ...seat,
+        isViewer,
+        hands: seat.hands.map((hand) => {
+          const canSeeHand = isViewer || revealPlayers;
+          return {
+            ...hand,
+            cards: canSeeHand
+              ? hand.cards
+              : hand.cards.map((_card, index) => ({ id: `hidden-${hand.id}-${index}`, hidden: true })),
+            score: canSeeHand ? handScore(hand.cards) : null
+          };
+        })
+      };
+    })
   };
 }
 

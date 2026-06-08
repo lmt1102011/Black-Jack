@@ -21,12 +21,14 @@ export const CLIENT_EVENTS = {
   spectateTable: 'table:spectate',
   placeBet: 'game:bet',
   playerAction: 'game:action',
+  cardPeek: 'card:peek',
   chatMessage: 'chat:message'
 };
 
 export const SERVER_EVENTS = {
   lobbyUpdate: 'lobby:update',
   tableState: 'table:state',
+  cardPeek: 'card:peek',
   tableError: 'table:error',
   toast: 'ui:toast',
   chatMessage: 'chat:message'

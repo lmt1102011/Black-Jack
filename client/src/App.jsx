@@ -81,7 +81,7 @@ export default function App() {
             <LobbyView lobby={socket.lobby} connected={socket.connected} actions={socket.actions} openTable={quickMatch} />
           ) : null}
           {activeView === 'table' ? (
-            <TableView table={socket.table} profile={auth.profile} connected={socket.connected} actions={socket.actions} goLobby={() => setActiveView('lobby')} />
+            <TableView table={socket.table} profile={auth.profile} connected={socket.connected} actions={socket.actions} remotePeeks={socket.remotePeeks} goLobby={() => setActiveView('lobby')} />
           ) : null}
           {activeView === 'missions' ? <MissionsView /> : null}
           {activeView === 'leaderboards' ? <LeaderboardsView /> : null}

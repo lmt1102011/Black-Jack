@@ -9,12 +9,11 @@ import { formatNumber } from '../lib/format.js';
 
 const chipValues = [100, 250, 500, 1000, 2500, 5000];
 
-export function TableView({ table, profile, connected, actions, goLobby }) {
+export function TableView({ table, profile, connected, actions, remotePeeks = {}, goLobby }) {
   const [bet, setBet] = useState(100);
   const [chatText, setChatText] = useState('');
   const [showChat, setShowChat] = useState(false);
   const [now, setNow] = useState(Date.now());
-  const [revealedCards, setRevealedCards] = useState(() => new Set());
   const [dealtCards, setDealtCards] = useState(() => new Set());
   const previousOwnCardsRef = useRef(new Set());
 
@@ -36,13 +35,8 @@ export function TableView({ table, profile, connected, actions, goLobby }) {
     viewerSeat?.hands?.flatMap((hand) => hand.cards.map((card) => card.id)) ?? []
   ), [viewerSeat]);
   const ownCardSignature = ownCardIds.join('|');
-  const firstOwnCardIds = useMemo(() => (
-    viewerSeat?.hands?.map((hand) => hand.cards[0]?.id).filter(Boolean) ?? []
-  ), [viewerSeat]);
-  const firstOwnCardSignature = firstOwnCardIds.join('|');
 
   useEffect(() => {
-    setRevealedCards(new Set());
     setDealtCards(new Set());
     previousOwnCardsRef.current = new Set();
   }, [roundKey]);
@@ -69,24 +63,6 @@ export function TableView({ table, profile, connected, actions, goLobby }) {
 
     previousOwnCardsRef.current = new Set(ownCardIds);
   }, [ownCardSignature, ownCardIds]);
-
-  useEffect(() => {
-    if (!firstOwnCardIds.length) return;
-    setRevealedCards((current) => {
-      const next = new Set(current);
-      for (const id of firstOwnCardIds) next.add(id);
-      return next;
-    });
-  }, [firstOwnCardSignature, firstOwnCardIds]);
-
-  function revealCard(cardId) {
-    setRevealedCards((current) => {
-      const next = new Set(current);
-      next.add(cardId);
-      return next;
-    });
-  }
-
   function sendChat(event) {
     event.preventDefault();
     if (!chatText.trim() || !table) return;
@@ -142,9 +118,9 @@ export function TableView({ table, profile, connected, actions, goLobby }) {
                 key={seat.id}
                 active={seat.id === table.activeSeatId}
                 dealtCards={dealtCards}
-                revealCard={revealCard}
-                revealedCards={revealedCards}
+                remotePeeks={remotePeeks}
                 seat={seat}
+                tableId={table.id}
                 tablePhase={table.phase}
                 viewer={false}
               />
@@ -159,10 +135,11 @@ export function TableView({ table, profile, connected, actions, goLobby }) {
             {viewerSeat ? (
               <PlayerSpot
                 active={viewerSeat.id === table.activeSeatId}
+                actions={actions}
                 dealtCards={dealtCards}
-                revealCard={revealCard}
-                revealedCards={revealedCards}
+                remotePeeks={remotePeeks}
                 seat={viewerSeat}
+                tableId={table.id}
                 tablePhase={table.phase}
                 viewer
                 large
@@ -262,7 +239,7 @@ function DeckButton({ disabled, onDraw }) {
   );
 }
 
-function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCards, seat, tablePhase, viewer }) {
+function PlayerSpot({ active, actions, dealtCards, large = false, remotePeeks, seat, tableId, tablePhase, viewer }) {
   const revealAll = tablePhase === TABLE_PHASES.dealer || tablePhase === TABLE_PHASES.settled || seat.hands?.some((hand) => hand.result);
   const visibleHands = seat.hands ?? [];
 
@@ -285,18 +262,13 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
       {visibleHands.length ? (
         <div className={clsx('grid gap-2', large && visibleHands.length > 1 && 'sm:grid-cols-2')}>
           {visibleHands.map((hand, handIndex) => {
-            const revealedCount = hand.cards.filter((card, cardIndex) => (
-              revealAll || (viewer && ((large && cardIndex === 0) || revealedCards.has(card.id)))
-            )).length;
-            const allCardsVisible = revealedCount === hand.cards.length;
-            const shouldShowScore = revealAll || (viewer && allCardsVisible);
             const stackCards = viewer && large && !revealAll;
             return (
               <div key={hand.id} className={clsx(large ? 'viewer-hand-zone' : 'hand-strip p-2')}>
                 <div className={clsx('mb-2 flex items-center justify-between gap-2 text-xs', large && 'viewer-hand-meta')}>
                   <span className="font-semibold text-white/[0.52]">{large ? `Tay ${handIndex + 1}` : `T${handIndex + 1}`}</span>
                   <span className={clsx('font-black', hand.result ? resultTone(hand.result) : 'text-white/65')}>
-                    {hand.result ? resultText(hand.result) : shouldShowScore ? slatScoreLabel(hand) : revealedCount ? `${revealedCount} lá mở` : 'Úp bài'}
+                    {hand.result ? resultText(hand.result) : revealAll ? slatScoreLabel(hand) : viewer ? 'Kéo góc để xem' : 'Úp bài'}
                   </span>
                 </div>
                 <div className={clsx(
@@ -306,16 +278,8 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
                 )}
                 >
                   {hand.cards.map((card, cardIndex) => {
-                    const visibleCard = revealAll || (viewer && ((large && cardIndex === 0) || revealedCards.has(card.id)));
-                    const faceDown = !visibleCard;
-                    const previousOpenCard = hand.cards
-                      .slice(0, cardIndex)
-                      .reverse()
-                      .find((candidate, reverseIndex) => {
-                        const originalIndex = cardIndex - reverseIndex - 1;
-                        return revealAll || (viewer && ((large && originalIndex === 0) || revealedCards.has(candidate.id)));
-                      });
-                    const weightLevel = viewer && faceDown && !revealAll ? revealedCount : 0;
+                    const faceDown = !revealAll;
+                    const peekKey = `${tableId}:${seat.id}:${hand.id}:${cardIndex}`;
                     return (
                       <div key={card.id} className="slat-card-slot" style={cardSlotStyle(cardIndex, hand.cards.length, stackCards)}>
                         <PlayingCard
@@ -323,12 +287,10 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
                           compact={!large}
                           dealt={viewer && dealtCards.has(card.id)}
                           faceDown={faceDown}
-                          interactive={viewer && faceDown && !revealAll}
-                          onReveal={revealCard}
+                          interactive={viewer && faceDown && !card.hidden}
+                          onPeekChange={viewer ? (activePeek) => actions?.cardPeek(tableId, hand.id, cardIndex, activePeek) : undefined}
+                          remotePeek={!viewer && Boolean(remotePeeks?.[peekKey])}
                           peekLabel="Lật"
-                          stackedCard={previousOpenCard}
-                          weightLevel={weightLevel}
-                          coverDrag={stackCards && faceDown}
                         />
                       </div>
                     );
@@ -336,7 +298,7 @@ function PlayerSpot({ active, dealtCards, large = false, revealCard, revealedCar
                 </div>
                 <div className={clsx('mt-2 flex items-center justify-between gap-2 text-xs text-white/[0.48]', large && 'viewer-hand-footer')}>
                   <span>Cược {formatNumber(hand.bet)}</span>
-                  {viewer && !revealAll ? <span>{revealedCount}/{hand.cards.length} lật</span> : null}
+                  {viewer && !revealAll ? <span>peek riêng tư</span> : null}
                 </div>
               </div>
             );

@@ -19,6 +19,13 @@ export const playerActionSchema = z.object({
   action: z.enum(Object.values(PLAYER_ACTIONS))
 });
 
+export const cardPeekSchema = z.object({
+  tableId: z.string().min(8),
+  handId: z.string().min(3),
+  cardIndex: z.number().int().min(0).max(10),
+  active: z.boolean()
+});
+
 export const chatSchema = z.object({
   tableId: z.string().min(8),
   text: z.string().trim().min(1).max(280)
