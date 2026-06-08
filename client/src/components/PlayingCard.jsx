@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { assets } from '../lib/assets.js';
 import { suitSymbol } from '../lib/format.js';
 
@@ -32,30 +32,61 @@ export function PlayingCard({
   const red = card?.suit === 'hearts' || card?.suit === 'diamonds';
   const canReveal = interactive && hidden && !serverHidden;
   const cardWeight = canReveal ? Math.min(3, Math.max(0, Number(weightLevel) || 0)) : 0;
-  const dragResistance = Math.max(0.24, 0.42 - cardWeight * 0.055);
+  const dragResistance = Math.max(0.2, 0.34 - cardWeight * 0.045);
   const startRef = useRef(null);
   const movedRef = useRef(false);
-  const [drag, setDrag] = useState({ active: false, x: 0, y: 0 });
-  const peekStrength = Math.min(1, Math.max(Math.abs(drag.x) / 42, Math.abs(drag.y) / 42));
-  const dragStyle = drag.active
+  const revealTimerRef = useRef(null);
+  const [drag, setDrag] = useState({ active: false, committed: false, x: 0, y: 0 });
+  const pullDistance = Math.hypot(drag.x, drag.y);
+  const pullStrength = drag.committed ? 1 : Math.min(1, pullDistance / 62);
+  const pullRotate = Math.max(-9, Math.min(9, drag.x * 0.075));
+  const cardStyle = canReveal
     ? {
-        transform: `translate(${drag.x}px, ${drag.y}px) rotate(${drag.x * 0.04}deg)`,
-        transition: 'none',
-        '--peek-strength': peekStrength,
-        '--peek-rotate': `${Math.max(-10, Math.min(10, drag.x * 0.08))}deg`,
+        '--pull-x': `${drag.x}px`,
+        '--pull-y': `${drag.y}px`,
+        '--pull-strength': pullStrength,
+        '--pull-rotate': `${pullRotate}deg`,
+        '--stack-x': `${drag.x * 0.16 - 7 - cardWeight * 2}px`,
+        '--stack-y': `${drag.y * 0.16 + 7 + cardWeight * 2}px`,
+        '--stack-rotate': `${-3 - cardWeight + pullRotate * 0.24}deg`,
+        '--stack-opacity': 0.32 + pullStrength * 0.5,
+        '--cover-shadow-y': `${12 + pullStrength * 16}px`,
+        '--cover-shadow-blur': `${18 + pullStrength * 20}px`,
+        '--front-ring': `${pullStrength}px`,
+        '--groove-opacity': 0.28 + pullStrength * 0.32,
+        '--halo-opacity': pullStrength * 0.56,
+        '--halo-scale': 0.9 + pullStrength * 0.12,
         '--stack-weight': cardWeight
       }
     : undefined;
+
+  useEffect(() => () => window.clearTimeout(revealTimerRef.current), []);
 
   function reveal() {
     if (canReveal) onReveal?.(card.id);
   }
 
+  function commitReveal(rawX = 1, rawY = -0.2) {
+    if (!canReveal) return;
+    const angle = Math.atan2(rawY, rawX || 1);
+    const finalDistance = compact ? 62 : 86;
+    const finalX = Math.cos(angle) * finalDistance;
+    const finalY = Math.sin(angle) * finalDistance - (compact ? 4 : 8);
+
+    window.clearTimeout(revealTimerRef.current);
+    setDrag({ active: false, committed: true, x: finalX, y: finalY });
+    revealTimerRef.current = window.setTimeout(() => {
+      reveal();
+      setDrag({ active: false, committed: false, x: 0, y: 0 });
+    }, 170);
+  }
+
   function handlePointerDown(event) {
     if (!canReveal) return;
+    window.clearTimeout(revealTimerRef.current);
     startRef.current = { x: event.clientX, y: event.clientY };
     movedRef.current = false;
-    setDrag({ active: true, x: 0, y: 0 });
+    setDrag({ active: true, committed: false, x: 0, y: 0 });
     event.currentTarget.setPointerCapture?.(event.pointerId);
   }
 
@@ -66,23 +97,27 @@ export function PlayingCard({
     const x = rawX * dragResistance;
     const y = rawY * dragResistance;
     if (Math.abs(rawX) > 6 || Math.abs(rawY) > 6) movedRef.current = true;
-    setDrag({ active: true, x, y });
+    setDrag({ active: true, committed: false, x, y });
   }
 
   function handlePointerUp(event) {
     if (!startRef.current) return;
     const rawX = event.clientX - startRef.current.x;
     const rawY = event.clientY - startRef.current.y;
-    const shouldReveal = Math.abs(rawX) > 62 || rawY < -42 || Math.abs(rawY) > 74;
+    const shouldReveal = Math.hypot(rawX, rawY) > 96 || rawY < -74;
     startRef.current = null;
-    setDrag({ active: false, x: 0, y: 0 });
-    if (shouldReveal || !movedRef.current) reveal();
+    if (shouldReveal || !movedRef.current) {
+      commitReveal(rawX || 1, rawY || -0.2);
+      return;
+    }
+
+    setDrag({ active: false, committed: false, x: 0, y: 0 });
   }
 
   function handleKeyDown(event) {
     if ((event.key === 'Enter' || event.key === ' ') && canReveal) {
       event.preventDefault();
-      reveal();
+      commitReveal(1, -0.2);
     }
   }
 
@@ -96,15 +131,15 @@ export function PlayingCard({
       onPointerUp={handlePointerUp}
       onPointerCancel={() => {
         startRef.current = null;
-        setDrag({ active: false, x: 0, y: 0 });
+        setDrag({ active: false, committed: false, x: 0, y: 0 });
       }}
       onKeyDown={handleKeyDown}
-      style={dragStyle}
+      style={cardStyle}
       className={clsx(
         'real-card-wrap',
         compact ? 'real-card-compact' : 'real-card-large',
         canReveal && 'real-card-interactive',
-        canReveal && drag.active && 'is-peeking',
+        canReveal && (drag.active || drag.committed) && 'is-peeking',
         canReveal && stackedCard && 'has-weight-stack',
         dealt && 'deal-from-deck'
       )}
@@ -112,17 +147,19 @@ export function PlayingCard({
       {canReveal && stackedCard ? (
         <CardWeightStack card={stackedCard} compact={compact} weightLevel={cardWeight} />
       ) : null}
-      <div className={clsx('real-card-core', hidden ? 'is-hidden' : 'is-visible')}>
+      <div className={clsx(
+        'real-card-core',
+        hidden ? 'is-hidden' : 'is-visible',
+        canReveal && 'is-manual-reveal',
+        drag.committed && 'is-revealing',
+        drag.active && 'is-held'
+      )}
+      >
         <div className={clsx('real-card-face real-card-front', red ? 'card-red' : 'card-black')}>
           {card && !serverHidden ? <CardFront card={card} compact={compact} /> : null}
         </div>
         <div className="real-card-face real-card-back" style={{ backgroundImage: `url("${assets.cardBack}")` }}>
-          {canReveal && card ? (
-            <div className={clsx('card-peek-corner', red ? 'card-red' : 'card-black')}>
-              <Corner rank={card.rank} suit={suitSymbol(card.suit)} />
-            </div>
-          ) : null}
-          {canReveal ? <span className="peek-tag">{peekLabel}</span> : null}
+          {canReveal ? <span className="peek-groove" aria-hidden="true" /> : null}
         </div>
       </div>
     </div>
